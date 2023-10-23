@@ -1,0 +1,22 @@
+MemoryCellType_SRAM = 1
+SRAM_tech = 65
+SRAM_height = 256
+SRAM_width = 256
+
+MemoryCellType_eDRAM = 1
+eDRAM_tech = 65
+eDRAM_height = 256
+eDRAM_width = 256
+
+MemoryCellType_RRAM = 0
+RRAM_tech = 65
+RRAM_height = 256
+RRAM_width = 256
+
+MacType_InMemoryCompute = 1
+MacType_DigitalPE = 0
+Mac_tech = 40
+Packaging_dimension = 2 # 2, 2.5, 3
+BitWidth_if = 8
+Bitwidth_weight = 8
+

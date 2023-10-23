@@ -1,0 +1,9 @@
+model_type,Transformer
+vocabulary_size,30522
+encoder_layer,6
+decoder_layer,6
+head,12
+token_length,512
+hidden_size,768
+memory_augmentation_flag,0
+memory_token_length,32
