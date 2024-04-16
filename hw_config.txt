@@ -1,22 +1,36 @@
-MemoryCellType_SRAM = 1
 SRAM_tech = 65
 SRAM_height = 256
 SRAM_width = 256
 
-MemoryCellType_eDRAM = 1
-eDRAM_tech = 65
-eDRAM_height = 256
-eDRAM_width = 256
+eDRAM_tech = 45
+eDRAM_cellSize_height = 0.84e-6 # 0.84um
+eDRAM_cellSize_width = 0.84e-6 # 0.84um
+eDRAM_SubArray_height = 128  # 128*0.84um=107.52e-6
+eDRAM_SubArray_width = 128   # 128*0.84um=107.52e-6
+eDRAM_SubArray_latency = 1
+eDRAM_SubArray_power = 1
+eDRAM_SubArray_area = 1
+eDRAM_PE_latency = 5e-9 # freq: 200Mhz
+eDRAM_PE_dynamicEnergy = 0.385e-9 # 5.88fj/bit * 256 * 256 = 0.385e-9J, refresh? retention?
+eDRAM_PE_leakPower = 0.188e-6 # cell: 2.87pW, PE: 2.87e-12 *256*256=0.188e-6
 
-MemoryCellType_RRAM = 0
-RRAM_tech = 65
-RRAM_height = 256
-RRAM_width = 256
+RRAM_tech = 45
+RRAM_cellSize_height = 80e-9 # 2F=2*40nm
+RRAM_cellSize_width = 80e-9 # 2F=2*40nm
+RRAM_SubArray_height = 128  # 128*2F=128*2*40nm=10240e-9
+RRAM_SubArray_width = 128  # 128*2F=128*2*40nm=10240e-9
+RRAM_SubArray_latency = 1
+RRAM_SubArray_power = 1
+RRAM_SubArray_area = 1
+RRAM_PE_latency = 25e-9 #read/wrte: 10~30ns
+RRAM_PE_dynamicEnergy = 196.608e-9 # 3.0pJ/bit * 256 * 256 = 196.608e-9J
+RRAM_PE_leakPower = 0 # [195.41uW for 256*256]
 
 MacType_InMemoryCompute = 1
 MacType_DigitalPE = 0
 Mac_tech = 40
-Packaging_dimension = 2 # 2, 2.5, 3
-BitWidth_if = 8
-Bitwidth_weight = 8
-
+Packaging_dimension = 3 # 2, 2.5, 3
+BitWidth_in = 8
+BitWidth_weight = 8
+Static_MemoryCellType = RRAM
+Dynamic_MemoryCellType = eDRAM

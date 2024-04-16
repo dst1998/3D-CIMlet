@@ -1,0 +1,53 @@
+==========================================
+Packaging_dimension: 2
+===== Total =====
+Total Dynamic Power: 688995.5240001172
+Total Leak Power: 521.0
+Total Latency: 41986.5014488239
+Total Area (mm2): 521000450.30005324
+Total TOPS: 0.0007759287440000007
+Energy Efficiency (TOPS/W): 2.6802016722329585e-14
+Energy Efficiency Per Area (TOPS/W/mm2): 5.1443365753127154e-23
+===== Breakdown =====
+Num_StaticPE: 329
+Num_DynamicPE: 192
+Area_Total_Wire: 5.3248000000000006e-11
+DynamicPower_Total_Wire: 688439.28
+Latency_Total_Wire: 41888.49295588235
+==========================================
+==========================================
+Packaging_dimension: 2.5
+===== Total =====
+Total Dynamic Power: 556.2443633499889
+Total Leak Power: 521.0
+Total Latency: 98.01454682155557
+Total Area (mm2): 521000450.3
+Total TOPS: 0.0007759287440000007
+Energy Efficiency (TOPS/W): 7.348810927449407e-09
+Energy Efficiency Per Area (TOPS/W/mm2): 1.410519112453329e-17
+===== Breakdown =====
+Num_StaticPE: 329
+Num_DynamicPE: 192
+Area_Total_Wire: 0
+DynamicPower_Total_Wire: 0.0003632328
+Latency_Total_Wire: 0.00605388
+==========================================
+==========================================
+Packaging_dimension: 3
+===== Total =====
+Total Dynamic Power: 212087.81338411715
+Total Leak Power: 521.0
+Total Latency: 12968.752437796353
+Total Area (mm2): 82250056.25006387
+Total TOPS: 0.0007759287440000007
+Energy Efficiency (TOPS/W): 2.814118471421034e-13
+Energy Efficiency Per Area (TOPS/W/mm2): 3.421418294068156e-21
+===== Breakdown =====
+Num_StaticPE: 329
+Num_DynamicPE: 192
+Area_Total_Wire: 1.55648e-11
+DynamicPower_Total_Wire: 211531.56938399997
+Latency_Total_Wire: 12870.743944854798
+Area Total_tsv 2.3987e-10
+Latency_Total_tsv: 1.856304e-09
+==========================================

@@ -27,7 +27,7 @@ class InMemoryCompute(Mac):
         self.technode = technode
 
     def CalculateMacArea(self):
-        pass
+        pass # get from Neurosim
     def CalculateMacLatency(self):
         pass
     def CalculateMacPower(self):
