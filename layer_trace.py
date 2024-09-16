@@ -13,8 +13,10 @@ import shutil
 #type = 'Homogeneous Design'
 #scale = 100
 
-def generate_trace_noc(Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Output_eachLayer, Num_Weight_eachLayer,
+def generate_trace_noc(config, Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Output_eachLayer, Num_Weight_eachLayer,
                         BitWidth_in, BitWidth_weight, bus_width):
+    
+    scale = 100
     
     num_layer = len(Num_StaticPE_eachLayer)
 
@@ -42,9 +44,18 @@ def generate_trace_noc(Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Outp
     # chiplet_dir_name = 'Chiplet_' + str(chiplet_idx)
     
     # os.mkdir(chiplet_dir_name)
+
+    # 使用 os.path.splitext 获取文件名和扩展名，然后只使用文件名部分
+    filename_base = os.path.splitext(config.model_filename)[0]
+    directory_name = f"trace_output_{filename_base}"
+    os.makedirs(directory_name, exist_ok=True)
+    os.chdir(directory_name)
+
     trace_all_layers = []
     
     for layer_idx in range(num_layer-1): # 100 layers, layer_idx = 0~98
+
+        print("layer_idx:",layer_idx)
         
         # if (layer_idx+1) < num_layer:
         trace = np.array([[0,0,0]])
@@ -52,8 +63,9 @@ def generate_trace_noc(Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Outp
 
         num_output_bits_this_layer = Num_Output_eachLayer[layer_idx] * BitWidth_in
         num_PE_this_layer = Num_StaticPE_eachLayer[layer_idx] + Num_DynamicPE_eachLayer[layer_idx]
-        num_output_bits_perPE_this_layer = math.ceil(num_output_bits_this_layer / num_PE_this_layer)
-        num_outputPackets_perPE_this_layer= math.ceil(num_output_bits_perPE_this_layer / bus_width)
+        # num_output_bits_perPE_this_layer = math.ceil(num_output_bits_this_layer / num_PE_this_layer)
+        num_outputPackets_this_layer = math.ceil(num_output_bits_this_layer / bus_width) #####
+        num_outputPackets_this_layer = math.ceil(num_outputPackets_this_layer / scale)
 
         # num_packets_this_layer = math.ceil(num_output_bits_this_layer / bus_width)
 
@@ -137,22 +149,41 @@ def generate_trace_noc(Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Outp
         #     timestamp = timestamp + 1
         #     print("timestamp",timestamp)
         
-        for src_PE_idx in range(src_PE_begin, src_PE_end+1):
-            for packet_idx in range(0, math.ceil(num_outputPackets_perPE_this_layer/ (dest_PE_end - dest_PE_begin + 1))):
-                for dest_PE_idx in range(dest_PE_begin, dest_PE_end+1):
-                    trace = np.append(trace, [[src_PE_idx, dest_PE_idx, timestamp]], axis=0)
+        # for src_PE_idx in range(src_PE_begin, src_PE_end+1):
+        #     for packet_idx in range(0, math.ceil(num_outputPackets_perPE_this_layer/ (dest_PE_end - dest_PE_begin + 1))):
+        #         for dest_PE_idx in range(dest_PE_begin, dest_PE_end+1):
+        #             trace = np.append(trace, [[src_PE_idx, dest_PE_idx, timestamp]], axis=0)
                     
-                if (packet_idx != num_outputPackets_perPE_this_layer-1):
+        #         if (packet_idx != num_outputPackets_perPE_this_layer-1):
+        #             timestamp = timestamp + 1
+        #     timestamp = timestamp + 1
+        
+
+        for packet_idx in range(0, num_outputPackets_this_layer):
+            for dest_PE_idx in range(dest_PE_begin, dest_PE_end+1):
+                for src_PE_idx in range(src_PE_begin, src_PE_end+1):
+                    trace = np.append(trace, [[src_PE_idx, dest_PE_idx, timestamp]], axis=0)
+                
+                if (dest_PE_idx != dest_PE_end):
                     timestamp = timestamp + 1
             timestamp = timestamp + 1
-        
+
         # print("timestamp",timestamp)
         
         
         trace = np.delete(trace, 0, 0)
         # print("layer = ",layer_idx)
         # print(trace)
+        filename = 'trace_file_layer_' + str(layer_idx) + '.txt'
+        print("1")
+        # os.chdir("trace_output")
+        print("2")
+        np.savetxt(filename, trace, fmt='%i')
+        print("3")
         trace_all_layers.append(trace)
+        print("4")
+    
+    os.chdir("..")
     
     # print(trace)
     return trace_all_layers

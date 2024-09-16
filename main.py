@@ -1,57 +1,75 @@
+from math import ceil
+import numpy as np
+import re
+
+from config import Config
 from model import GetData
 from Package import Pack2D, Pack2_5D, Pack3D
 from tsv_path import TSVPath
-from math import ceil
 from layer_trace import generate_trace_noc
 from wire import Wire
+from chiplet_layer_range import get_static_chiplet_layer_range,get_static_chiplet_layers,get_dest_layers
+from layer_mapping import get_layer_energy_latency
+from Interconnect.noc_estimation import interconnect_estimation
+from Interconnect.nop_estimation import nop_interconnect_estimation
+from Interconnect.NoP_hardware import NoP_hardware_estimation
+# from NoP_hardware import *
 
-def main(Packaging_dimension):
+def main(config):
     # load in model and hw confic info
-    model_filename = 'user_defined_example.csv'  # 'user_defined_example.csv', 'hdvit_changed.csv'
-    hw_config_filename = 'hw_config.txt'
-    data_loader = GetData(model_filename, hw_config_filename)
-    NetStructure = data_loader.load_model()
-    hw_configs = data_loader.load_hardware_config()
+    model_filename = config.model_filename
+    # hw_config_filename = 'hw_config.txt'
+    # data_loader = GetData(model_filename)
+    # NetStructure = data_loader.load_model()
+    # hw_configs = data_loader.load_hardware_config()
+    NetStructure = config.load_model()
 
-    BitWidth_in = int(hw_configs.get('BitWidth_in', 'Key not found'))
-    BitWidth_weight = int(hw_configs.get('BitWidth_weight', 'Key not found'))
-    # Packaging_dimension = float(hw_configs.get('Packaging_dimension', 'Key not found'))
+    BitWidth_in = config.BitWidth_in
+    BitWidth_weight = config.BitWidth_weight
 
-    eDRAM_cellSize_height = float(hw_configs.get('eDRAM_cellSize_height', 'Key not found'))
-    eDRAM_cellSize_width = float(hw_configs.get('eDRAM_cellSize_width', 'Key not found'))
-    eDRAM_SubArray_height = int(hw_configs.get('eDRAM_SubArray_height', 'Key not found'))
-    eDRAM_SubArray_width = int(hw_configs.get('eDRAM_SubArray_width', 'Key not found'))
-    eDRAM_SubArray_latency = float(hw_configs.get('eDRAM_SubArray_latency', 'Key not found'))
-    eDRAM_SubArray_power = float(hw_configs.get('eDRAM_SubArray_power', 'Key not found'))
-    eDRAM_SubArray_area = float(hw_configs.get('eDRAM_SubArray_area', 'Key not found'))
-    eDRAM_PE_latency = float(hw_configs.get('eDRAM_PE_latency', 'Key not found'))
-    eDRAM_PE_dynamicEnergy = float(hw_configs.get('eDRAM_PE_dynamicEnergy', 'Key not found'))
-    eDRAM_PE_leakPower = float(hw_configs.get('eDRAM_PE_leakPower', 'Key not found'))
+    eDRAM_tech = config.eDRAM_tech
+    eDRAM_cellSize_height = config.eDRAM_cellSize_height
+    eDRAM_cellSize_width = config.eDRAM_cellSize_width
+    eDRAM_SubArray_height = config.eDRAM_SubArray_height
+    eDRAM_SubArray_width = config.eDRAM_SubArray_width
+    eDRAM_SubArray_latency = config.eDRAM_SubArray_latency
+    eDRAM_SubArray_power = config.eDRAM_SubArray_power
+    eDRAM_SubArray_area = config.eDRAM_SubArray_area
+    eDRAM_PE_latency = config.eDRAM_PE_latency
+    eDRAM_PE_dynamicEnergy = config.eDRAM_PE_dynamicEnergy
+    eDRAM_PE_leakPower = config.eDRAM_PE_leakPower
     eDRAM_cell_area = eDRAM_cellSize_height * eDRAM_cellSize_width
     eDRAM_SubArraySize_height = eDRAM_cellSize_height * eDRAM_SubArray_height
     eDRAM_SubArraySize_width = eDRAM_cellSize_width * eDRAM_SubArray_width
 
-    RRAM_cellSize_height = float(hw_configs.get('RRAM_cellSize_height', 'Key not found'))
-    RRAM_cellSize_width = float(hw_configs.get('RRAM_cellSize_width', 'Key not found'))
-    RRAM_SubArray_height = int(hw_configs.get('RRAM_SubArray_height', 'Key not found'))
-    RRAM_SubArray_width = int(hw_configs.get('RRAM_SubArray_width', 'Key not found'))
-    RRAM_SubArray_latency = float(hw_configs.get('RRAM_SubArray_latency', 'Key not found'))
-    RRAM_SubArray_power = float(hw_configs.get('RRAM_SubArray_power', 'Key not found'))
-    RRAM_SubArray_area = float(hw_configs.get('RRAM_SubArray_area', 'Key not found'))
-    RRAM_PE_latency = float(hw_configs.get('RRAM_PE_latency', 'Key not found'))
-    RRAM_PE_dynamicEnergy = float(hw_configs.get('RRAM_PE_dynamicEnergy', 'Key not found'))
-    RRAM_PE_leakPower = float(hw_configs.get('RRAM_PE_leakPower', 'Key not found'))
+    RRAM_tech = config.RRAM_tech
+    RRAM_cellSize_height = config.RRAM_cellSize_height
+    RRAM_cellSize_width = config.RRAM_cellSize_width
+    RRAM_SubArray_height = config.RRAM_SubArray_height
+    RRAM_SubArray_width = config.RRAM_SubArray_width
+    RRAM_SubArray_latency = config.RRAM_SubArray_latency
+    RRAM_SubArray_power = config.RRAM_SubArray_power
+    RRAM_SubArray_area = config.RRAM_SubArray_area
+    RRAM_PE_latency = config.RRAM_PE_latency
+    RRAM_PE_dynamicEnergy = config.RRAM_PE_dynamicEnergy
+    RRAM_PE_leakPower = config.RRAM_PE_leakPower
     RRAM_cell_area = RRAM_cellSize_height * RRAM_cellSize_width
     RRAM_SubArraySize_height = RRAM_cellSize_height * RRAM_SubArray_height
     RRAM_SubArraySize_width = RRAM_cellSize_width * RRAM_SubArray_width
 
+    Static_SubArray_height = config.static_subarray_height
+    Static_SubArray_width = config.static_subarray_width
+    Dynamic_SubArray_height = config.dynamic_subarray_height
+    Dynamic_SubArray_width = config.dynamic_subarray_width
+
+
+    static_chiplet_size = config.static_chiplet_height * config.static_chiplet_width
+    dynamic_chiplet_size = config.dynamic_chiplet_height * config.dynamic_chiplet_width
     
     
     # define memorycell type of static layer and dynamic layer
-    Static_MemoryCellType = hw_configs.get('Static_MemoryCellType', 'Key not found')
+    Static_MemoryCellType = config.Static_MemoryCellType
     if Static_MemoryCellType == 'RRAM':
-        Static_SubArray_height = RRAM_SubArray_height
-        Static_SubArray_width = RRAM_SubArray_width
         Static_SubArraySize_height = RRAM_SubArraySize_height
         Static_SubArraySize_width = RRAM_SubArraySize_width
         # Static_SubArray_latency = RRAM_SubArray_latency
@@ -62,8 +80,6 @@ def main(Packaging_dimension):
         LeakPower_StaticPE = RRAM_PE_leakPower
         Area_StaticCell = RRAM_cell_area
     if Static_MemoryCellType == 'eDRAM':
-        Static_SubArray_height = eDRAM_SubArray_height
-        Static_SubArray_width = eDRAM_SubArray_width
         Static_SubArraySize_height = eDRAM_SubArraySize_height
         Static_SubArraySize_width = eDRAM_SubArraySize_width
         # Static_SubArray_latency = eDRAM_SubArray_latency
@@ -73,10 +89,10 @@ def main(Packaging_dimension):
         DynamicEnergy_StaticPE = eDRAM_PE_dynamicEnergy
         LeakPower_StaticPE = eDRAM_PE_leakPower
         Area_StaticCell = eDRAM_cell_area
-    Num_StaticSubArrayPerPERow = 2 # can change
-    Num_StaticSubArrayPerPECol = 2 # can change
-    Static_PE_height = Static_SubArray_height * Num_StaticSubArrayPerPERow 
-    Static_PE_width = Static_SubArray_width * Num_StaticSubArrayPerPECol
+    Num_StaticSubArrayPerPERow = config.static_pe_width # num of subarray cols in a pe
+    Num_StaticSubArrayPerPECol = config.static_pe_height # num of subarray rows in a pe
+    Static_PE_height = Static_SubArray_height * Num_StaticSubArrayPerPECol
+    Static_PE_width = Static_SubArray_width * Num_StaticSubArrayPerPERow
     Num_StaticSubArrayPerPE = Num_StaticSubArrayPerPERow * Num_StaticSubArrayPerPECol
     Static_PESize_height = Static_SubArraySize_height * Num_StaticSubArrayPerPERow
     Static_PESize_width = Static_SubArraySize_width * Num_StaticSubArrayPerPECol
@@ -84,10 +100,8 @@ def main(Packaging_dimension):
     
 
     
-    Dynamic_MemoryCellType = hw_configs.get('Dynamic_MemoryCellType', 'Key not found')
+    Dynamic_MemoryCellType = config.Dynamic_MemoryCellType
     if Dynamic_MemoryCellType == 'RRAM':
-        Dynamic_SubArray_height = RRAM_SubArray_height
-        Dynamic_SubArray_width = RRAM_SubArray_width
         Dynamic_SubArraySize_height = RRAM_SubArraySize_height
         Dynamic_SubArraySize_width = RRAM_SubArraySize_width
         # Dynamic_SubArray_latency = RRAM_SubArray_latency
@@ -98,8 +112,6 @@ def main(Packaging_dimension):
         LeakPower_DynamicPE = RRAM_PE_leakPower
         Area_DynamicCell = RRAM_cell_area
     if Dynamic_MemoryCellType == 'eDRAM':
-        Dynamic_SubArray_height = eDRAM_SubArray_height
-        Dynamic_SubArray_width = eDRAM_SubArray_width
         Dynamic_SubArraySize_height = eDRAM_SubArraySize_height
         Dynamic_SubArraySize_width = eDRAM_SubArraySize_width
         # Dynamic_SubArray_latency = eDRAM_SubArray_latency
@@ -109,8 +121,8 @@ def main(Packaging_dimension):
         DynamicEnergy_DynamicPE = eDRAM_PE_dynamicEnergy
         LeakPower_DynamicPE = eDRAM_PE_leakPower
         Area_DynamicCell = eDRAM_cell_area
-    Num_DynamicSubArrayPerPERow = 2 # can change
-    Num_DynamicSubArrayPerPECol = 2 # can change
+    Num_DynamicSubArrayPerPERow = config.dynamic_pe_width # num of subarray cols in a pe
+    Num_DynamicSubArrayPerPECol = config.dynamic_pe_height # num of subarray rows in a pe
     Dynamic_PE_height = Dynamic_SubArray_height * Num_DynamicSubArrayPerPERow 
     Dynamic_PE_width = Dynamic_SubArray_width * Num_DynamicSubArrayPerPECol
     Num_DynamicSubArrayPerPE = Num_DynamicSubArrayPerPERow * Num_DynamicSubArrayPerPECol
@@ -139,14 +151,16 @@ def main(Packaging_dimension):
     Num_DynamicPE = 0
     Num_StaticPE_eachLayer = []
     Num_DynamicPE_eachLayer = []
+    performance_each_layer = []
+
+    for row in NetStructure:
+        # get TOPS of this layer
+        tops_thisLayer = row[0]*row[1]*row[3] *2 *1e-12
+        Total_tops += tops_thisLayer
 
     # breakdown value #####################
     Area_logic = 1.5e-4 
     Area_buffer = 3e-4
-    DynamicPower_logic = 4.67e-3/7.6e7*Total_tops
-    DynamicPower_buffer = 1.04e-3/7.6e7*Total_tops
-    Latency_logic = 1.5e-2/7.6e7*Total_tops
-    Latency_buffer = 2.88e-3/7.6e7*Total_tops
 
     technode_static = 45
     technode_dynamic = 45
@@ -186,38 +200,74 @@ def main(Packaging_dimension):
     # DynamicPower_buffer2sfu = 0 # calculate later
     # Latency_buffer2sfu = 0 # calculate later
 
+    DynamicPower_logic = 4.67e-3/7.6e7*Total_tops
+    DynamicPower_buffer = 1.04e-3/7.6e7*Total_tops
+    Latency_logic = 1.5e-2/7.6e7*Total_tops
+    Latency_buffer = 2.88e-3/7.6e7*Total_tops
+    
+
     Num_StaticTier = 4 # change from user
     Num_DynamicTier = 4 # change from user
     ##########################################
     
-    # get total num of static subarray/PE and dynamic subarray/PE
-    for row in NetStructure:
+    num_static_chiplet_eachLayer = []
+    num_dynamic_chiplet_eachLayer = []
+    # get num of used static subarray/PE or used dynamic subarray/PE of each model layer
+    # get dynamic power and latency
+    for layer_index, row in enumerate(NetStructure):
+        # get this layer operation is static or dynamic
+        if row[6]==0: # is static layer
+            # test
+            num_used_chiplet_this_layer,num_used_pe_this_layer, num_used_subarray_this_layer,performance_this_layer = get_layer_energy_latency(row,config,config.static_chiplet_technode,chiplet_type='static',memory_cell_type=config.static_chiplet_memory_cell_type)
 
-        if row[6]==0: # static layer
-            Num_StaticSubArray_thisLayer = ceil(row[2]/Static_SubArray_height) * ceil(row[3]*BitWidth_weight/Static_SubArray_width) # weightRowNum * weightColNum
-            Num_StaticSubArray_eachLayer.append(Num_StaticSubArray_thisLayer)
-            Num_DynamicSubArray_eachLayer.append(0)
-            Num_StaticSubArray += Num_StaticSubArray_thisLayer
+            num_static_chiplet_eachLayer.append(num_used_chiplet_this_layer)
+            num_dynamic_chiplet_eachLayer.append(0)
 
-            Num_StaticPE_thisLayer = ceil(Num_StaticSubArray_thisLayer / Num_StaticSubArrayPerPE)
-            Num_StaticPE_eachLayer.append(Num_StaticPE_thisLayer)
+            Num_StaticPE_eachLayer.append(num_used_pe_this_layer)
             Num_DynamicPE_eachLayer.append(0)
-            
-        else: # dynamic layer
-            Num_DynamicSubArray_thisLayer = ceil(row[2]/Dynamic_SubArray_height) * ceil(row[3]*BitWidth_weight/Dynamic_SubArray_width) * row[8] # weightRowNum * weightColNum
-            Num_DynamicSubArray_eachLayer.append(Num_DynamicSubArray_thisLayer)
-            Num_StaticSubArray_eachLayer.append(0)
-            Num_DynamicSubArray += Num_DynamicSubArray_thisLayer
 
-            Num_DynamicPE_thisLayer = ceil(Num_DynamicSubArray_thisLayer / Num_DynamicSubArrayPerPE)
-            Num_DynamicPE_eachLayer.append(Num_DynamicPE_thisLayer)
-            Num_StaticPE_eachLayer.append(0)
+            Num_StaticSubArray_eachLayer.append(num_used_subarray_this_layer)
+            Num_DynamicSubArray_eachLayer.append(0)
+            # test end
         
+        else: # dynamic layer
+            # test
+            num_used_chiplet_this_layer,num_used_pe_this_layer, num_used_subarray_this_layer,performance_this_layer = get_layer_energy_latency(row,config,config.dynamic_chiplet_technode,chiplet_type='dynamic',memory_cell_type=config.dynamic_chiplet_memory_cell_type)
+
+            num_static_chiplet_eachLayer.append(0)
+            num_dynamic_chiplet_eachLayer.append(num_used_chiplet_this_layer)
+
+            Num_StaticPE_eachLayer.append(0)
+            Num_DynamicPE_eachLayer.append(num_used_pe_this_layer)
+
+            Num_StaticSubArray_eachLayer.append(0)
+            Num_DynamicSubArray_eachLayer.append(num_used_subarray_this_layer)
+            # test end
         Num_StaticPE = sum(Num_StaticPE_eachLayer)
         Num_DynamicPE = sum(Num_DynamicPE_eachLayer)
-        
-        # LeakPower_staticLayers = Num_StaticPE * LeakPower_StaticPE + LeakPower_StaticPE_Wire + LeakPower_StaticPE_logic + LeakPower_StaticPE_buffer
-        # LeakPower_dynamicLayers = Num_DynamicPE * LeakPower_DynamicPE + LeakPower_DynamicPE_Wire + LeakPower_DynamicPE_logic + LeakPower_DynamicPE_buffer
+        used_num_dynamic_chiplet = max(num_dynamic_chiplet_eachLayer)
+        num_chiplet_eachLayer = [a + b for a, b in zip(num_static_chiplet_eachLayer, num_dynamic_chiplet_eachLayer)]
+
+        # TODO: add [weight] [write latency and energy], global buffer to each chiplet (chiplet-to-chiplet).
+        # TODO: for first layer, add the [input] [write latency and energy] , global buffer to first chiplet (chiplet-to-chiplet).
+        # TODO: for last layer, add the [output] [write latency and energy] , last chiplet to global buffer(chiplet-to-chiplet).
+        # TODO: add [weight] in static chip [refresh latency and energy] based on below (all-layer latency) and noc,nop latency:
+        performance_each_layer.append(performance_this_layer)
+
+
+
+
+
+
+    # get location in chiplet for each model static layer (layer?: pe?~pe? in chiplet?)
+    # static_chiplet_layer_range, static_chiplet_availability, num_used_static_chiplet_all_layers,layer_location_begin_chiplet = get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer)
+    
+    dest_layers = get_dest_layers(config,NetStructure)
+    
+    static_chiplet_layers, static_chiplet_availability, num_used_static_chiplet_all_layers,layer_location_begin_chiplet = get_static_chiplet_layers(config,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer)
+
+    
+
 
     # print("Num StaticPE EachLayer:",Num_StaticPE_eachLayer)
     # print("Num DynamicPE EachLayer:",Num_DynamicPE_eachLayer)
@@ -225,20 +275,41 @@ def main(Packaging_dimension):
     # print("Num_DynamicPE:", Num_DynamicPE)
 
     # get Num of input Activation each Layer
-    Num_Output_eachLayer = []
+    Num_In_eachLayer = []
     Num_Weight_eachLayer = []
+    Num_Output_eachLayer = []
     for row in NetStructure:
-        Num_Output_eachLayer.append(row[4]*row[5] *row[8]) #row[8] is num_head
+        Num_In_eachLayer.append(row[0]*row[1] *row[8])
         Num_Weight_eachLayer.append(row[2]*row[3] *row[8])
+        Num_Output_eachLayer.append(row[4]*row[5] *row[8]) #row[8] is num_head
     
-    # print("Num_Activation_eachLayer:",Num_Output_eachLayer)
-    # print("Num_Weight_eachLayer:",Num_Weight_eachLayer)
+    # get global buffer size
+    maxnum_layer_in_bit = max(Num_In_eachLayer) * config.BitWidth_in
     
     # # get trace inside/inter layers
-    Bus_width = 32
-    layer_trace = generate_trace_noc(Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Output_eachLayer, Num_Weight_eachLayer,
-                        BitWidth_in, BitWidth_weight, Bus_width)
+    # Bus_width = 32
+    # layer_trace = generate_trace_noc(config, Num_StaticPE_eachLayer, Num_DynamicPE_eachLayer, Num_Output_eachLayer, Num_Weight_eachLayer,
+    #                     BitWidth_in, BitWidth_weight, config.pe_bus_width_2D)
     
+    num_used_chiplets = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
+
+    # NoC Estimation
+    noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+    
+    # NoP Estimation
+    nop_area, nop_latency, nop_energy = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size)
+    
+    # NoP Hardware Cost (Nop_area:um2, NoP_energy:pJ)
+    # NoP Parameters - Extracted from GRS Nvidia 
+    ebit = 43.2 # pJ 
+    # (0.58pJ/b in GRS Nvidia 28nm [CICC'18: Ground-Referenced Signaling for Intra-Chip and Short-Reach Chip-to-Chip Interconnects])
+    # (1.2pJ/b in ISSCC'17: A 14nm 1GHz FPGA with 2.5 D Transceiver Integration)
+    area_per_lane = 5304.5 #um2
+    clocking_area = 10609 #um2
+    n_lane = 32
+    n_bits_per_chiplet = 4.19E+06 #Automate this in next version
+    Nop_area, NoP_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_per_chiplet)
+
     # get Num of input Activation each Layer
     Latency_eachLayer = []
     DynamicEnergy_eachLayer = []
@@ -246,12 +317,12 @@ def main(Packaging_dimension):
     AvgPower_eachLayer = []
 
     
-    if Packaging_dimension == 2:
-        Pack = Pack2D()
+    if config.Packaging_dimension == 2:
+        # Pack = Pack2D()
+        Pack = Pack2D(config,maxnum_layer_in_bit)
+
         # get chip area
-        Total_Area = Pack.CalculateArea(
-            Num_StaticPE, Area_StaticPE, StaticWire_unitLengthArea, Static_PESize_height, Static_PESize_width, Area_logic,Area_buffer,
-            Num_DynamicPE, Area_DynamicPE, DynamicWire_unitLengthArea, Dynamic_PESize_height, Dynamic_PESize_width, Area_DynamicPE_sfu)
+        Total_Area = Pack.CalculateArea()
         
         # get leak power (need change!)
         LeakPower_staticLayers = Num_StaticPE * LeakPower_StaticPE + Pack.CalculateLeakPower_StaticPE_Wire() + LeakPower_StaticPE_logic + LeakPower_StaticPE_buffer
@@ -261,12 +332,9 @@ def main(Packaging_dimension):
 
         # get dynamic power and latency
         for row in NetStructure:
-            # get TOPS of this layer
-            tops_thisLayer = (row[0]*row[1]*row[3] + (row[0]-1)*row[1]*row[3]) *1e-12
-            Total_tops += tops_thisLayer
 
             # get this layer operation is static or dynamic
-            if row[6]: # is static layer
+            if row[6]==0: # is static layer
                 # get num of PE used of static layer
                 Num_StaticSubArray_thisLayer = ceil(row[2]/Static_SubArray_height) * ceil(row[3]*BitWidth_weight/Static_SubArray_width) # weightRowNum * weightColNum
                 Num_StaticPE_thisLayer = ceil(Num_StaticSubArray_thisLayer / Num_StaticSubArrayPerPE)
@@ -305,26 +373,25 @@ def main(Packaging_dimension):
                 
         ##
                 
-        Wire_DynamicPower = Pack.CalculateDynamicPower_StaticPE_Wire(layer_trace, Num_StaticPE, Num_DynamicPE,StaticWire_unitLengthDynPower)
-        Wire_Latency = Pack.CalculateLatency_StaticPE_Wire(layer_trace, Num_StaticPE, Num_DynamicPE, StaticWire_unitLengthLatency)
-        Wire_DynamicEnergy = Wire_DynamicPower*Wire_Latency
+        # Wire_DynamicPower = Pack.CalculateDynamicPower_StaticPE_Wire(layer_trace, Num_StaticPE, Num_DynamicPE,StaticWire_unitLengthDynPower)
+        # Wire_Latency = Pack.CalculateLatency_StaticPE_Wire(layer_trace, Num_StaticPE, Num_DynamicPE, StaticWire_unitLengthLatency)
+        # Wire_DynamicEnergy = Wire_DynamicPower*Wire_Latency
 
-        Total_DynamicEnergy = sum(Latency_eachLayer) 
-        # Total_DynamicEnergy += Wire_DynamicEnergy
-        Total_Latency = sum(Latency_eachLayer) 
-        # Total_Latency += Wire_Latency
+        # Total_DynamicEnergy = sum(Latency_eachLayer) 
+        # # Total_DynamicEnergy += Wire_DynamicEnergy
+        # Total_Latency = sum(Latency_eachLayer) 
+        # # Total_Latency += Wire_Latency
         ##
 
         
     
-    elif Packaging_dimension == 2.5:
+    elif config.Packaging_dimension == 2.5:
 
-        Pack = Pack2_5D()
+        # Pack = Pack2_5D()
+        Pack = Pack2_5D(config,maxnum_layer_in_bit)
 
         # get chip area
-        Total_Area = Pack.CalculateArea(
-            Num_StaticPE, Area_StaticPE, Area_logic,Area_buffer,
-            Num_DynamicPE, Area_DynamicPE, Area_DynamicPE_sfu)
+        Total_Area = Pack.CalculateArea()
         
         # get leak power
         LeakPower_staticLayers = Num_StaticPE * LeakPower_StaticPE + Pack.CalculateLeakPower_StaticPE_Wire() + LeakPower_StaticPE_logic + LeakPower_StaticPE_buffer
@@ -333,12 +400,9 @@ def main(Packaging_dimension):
         
         # get dynamic power and latency
         for row in NetStructure:
-            # get TOPS of this layer
-            tops_thisLayer = (row[0]*row[1]*row[3] + (row[0]-1)*row[1]*row[3]) *1e-12
-            Total_tops += tops_thisLayer
 
             # get this layer operation is static or dynamic
-            if row[6]: # is static layer
+            if row[6]==0: # is static layer
                 # get num of PE used of static layer
                 Num_StaticSubArray_thisLayer = ceil(row[2]/Static_SubArray_height) * ceil(row[3]*BitWidth_weight/Static_SubArray_width) # weightRowNum * weightColNum
                 Num_StaticPE_thisLayer = ceil(Num_StaticSubArray_thisLayer / Num_StaticSubArrayPerPE)
@@ -392,14 +456,12 @@ def main(Packaging_dimension):
         ##
 
     else: # H3D
-        Pack = Pack3D(Num_StaticPE,Num_DynamicPE,Num_StaticTier,Num_DynamicTier,
+        Pack = Pack3D(config,Num_StaticPE,Num_DynamicPE,Num_StaticTier,Num_DynamicTier,
                     StaticWire_unitLengthArea, Static_PE_height, Static_PE_width,
-                    DynamicWire_unitLengthArea, Dynamic_PE_height, Dynamic_PE_width)
+                    DynamicWire_unitLengthArea, Dynamic_PE_height, Dynamic_PE_width,
+                    maxnum_layer_in_bit)
         #get chip area
-        Total_Area = Pack.CalculateArea(
-            Area_StaticPE, Area_logic,Area_buffer,
-            Area_DynamicPE, Area_DynamicPE_sfu
-            )
+        Total_Area = Pack.CalculateArea()
 
         # get leak power
         LeakPower_staticLayers = Num_StaticPE * LeakPower_StaticPE + Pack.CalculateLeakPower_StaticPE_Wire() + LeakPower_StaticPE_logic + LeakPower_StaticPE_buffer
@@ -408,12 +470,9 @@ def main(Packaging_dimension):
         
         # get dynamic power and latency
         for row in NetStructure:
-            # get TOPS of this layer
-            tops_thisLayer = (row[0]*row[1]*row[3] + (row[0]-1)*row[1]*row[3]) *1e-12
-            Total_tops += tops_thisLayer
 
             # get this layer operation is static or dynamic
-            if row[6]: # is static layer
+            if row[6]==0: # is static layer
                 # get num of PE used of static layer
                 Num_StaticSubArray_thisLayer = ceil(row[2]/Static_SubArray_height) * ceil(row[3]*BitWidth_weight/Static_SubArray_width) # weightRowNum * weightColNum
                 Num_StaticPE_thisLayer = ceil(Num_StaticSubArray_thisLayer / Num_StaticSubArrayPerPE)
@@ -452,17 +511,19 @@ def main(Packaging_dimension):
                 Latency_eachLayer.append(Latency_thisLayer)
 
         ##
-        Wire_DynamicPower = Pack.CalculateDynamicPower_StaticPE_Wire(layer_trace, StaticWire_unitLengthDynPower)
-        Wire_Latency = Pack.CalculateLatency_StaticPE_Wire(layer_trace, StaticWire_unitLengthLatency)
-        Wire_DynamicEnergy = Wire_DynamicPower*Wire_Latency
+        # Wire_DynamicPower = Pack.CalculateDynamicPower_StaticPE_Wire(layer_trace, StaticWire_unitLengthDynPower)
+        # Wire_Latency = Pack.CalculateLatency_StaticPE_Wire(layer_trace, StaticWire_unitLengthLatency)
+        # Wire_DynamicEnergy = Wire_DynamicPower*Wire_Latency
 
-        Total_DynamicEnergy = sum(Latency_eachLayer) + Wire_DynamicEnergy
-        Total_Latency = sum(Latency_eachLayer) + Wire_Latency
+        # Total_DynamicEnergy = sum(Latency_eachLayer) + Wire_DynamicEnergy
+        # Total_Latency = sum(Latency_eachLayer) + Wire_Latency
         ##
+    
     
     DynamicEnergy_logic = DynamicPower_logic * Latency_logic
     DynamicEnergy_buffer = DynamicPower_buffer * Latency_buffer
     
+    Total_DynamicEnergy = 0
     Total_DynamicEnergy += DynamicEnergy_logic
     Total_DynamicEnergy += DynamicEnergy_buffer
 
@@ -475,7 +536,7 @@ def main(Packaging_dimension):
 
     # print PPA
     print("==========================================")
-    print("Packaging_dimension:",Packaging_dimension)
+    print("Packaging_dimension:",config.Packaging_dimension)
     print("===== Total =====")
     print("Total Dynamic Energy (J):",Total_DynamicEnergy)
     print("Total Leak Power (W):",Total_LeakPower)
@@ -490,14 +551,14 @@ def main(Packaging_dimension):
     print("Num_StaticPE:", Num_StaticPE)
     print("Num_DynamicPE:", Num_DynamicPE)
 
-    print("Area_Total_Wire:",Pack.Area_Total_Wire)
-    print("DynamicPower_Total_Wire:",Wire_DynamicPower)
-    print("Latency_Total_Wire:",Wire_Latency)
-    print("DynamicEnergy_Wire:",Wire_DynamicEnergy)
+    # print("Area_Total_Wire:",Pack.Area_Total_Wire)
+    # print("DynamicPower_Total_Wire:",Wire_DynamicPower)
+    # print("Latency_Total_Wire:",Wire_Latency)
+    # print("DynamicEnergy_Wire:",Wire_DynamicEnergy)
 
-    if (Packaging_dimension) == 3:
-        print("Area Total_tsv",Pack.Area_Total_tsv)
-        print("Latency_Total_tsv:",Pack.latency_z)
+    if (config.Packaging_dimension) == 3:
+        print("Area Total_tsv",Pack.total_tsv_area)
+        # print("Latency_Total_tsv:",Pack.latency_z)
     
     print("==========================================")
 
@@ -506,6 +567,10 @@ def main(Packaging_dimension):
     # print(NetStructure)
 
 
-main(2)
-main(2.5)
-main(3)
+# main(2)
+# main(2.5)
+# main(3)
+
+if __name__ == "__main__":
+    config = Config()
+    main(config)

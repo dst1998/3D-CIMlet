@@ -2,6 +2,9 @@ from math import ceil,sqrt
 from abc import ABC, abstractmethod
 from tsv_path import TSVPath
 
+from config import Config
+from chiplet import Chiplet
+
 def get_PE_relative_dist_xy(PE_Loc,PE_idx1,PE_idx2):
     dist = abs(PE_Loc[0][PE_idx1] - PE_Loc[0][PE_idx2]) + abs(PE_Loc[1][PE_idx1] - PE_Loc[1][PE_idx2])
     return dist
@@ -46,27 +49,35 @@ class Pack(ABC):
 
 
 class Pack2D(Pack):
-    def __init__(self):
-        self.Area_StaticPE_Wire = 0
-        self.Area_DynamicPE_Wire = 0
-        self.Area_Total_Wire = 0
-    def CalculateArea(self,
-            Num_StaticPE, Area_StaticPE, StaticWire_unitLengthArea, Static_PESize_height, Static_PESize_width, Area_logic,Area_buffer,
-            Num_DynamicPE, Area_DynamicPE, DynamicWire_unitLengthArea, Dynamic_PESize_height, Dynamic_PESize_width, Area_DynamicPE_sfu):
+    def __init__(self,config,maxnum_layer_in_bit):
+        # self.Area_StaticPE_Wire = 0
+        # self.Area_DynamicPE_Wire = 0
+        # self.Area_Total_Wire = 0
+
+        self.static_chiplet = Chiplet(config,chiplet_type='static',memory_cell_type=config.static_chiplet_memory_cell_type,maxnum_layer_in_bit=maxnum_layer_in_bit)
+        self.num_static_chiplet = config.num_static_chiplet
+        self.dynamic_chiplet = Chiplet(config,chiplet_type='dynamic',memory_cell_type=config.dynamic_chiplet_memory_cell_type,maxnum_layer_in_bit=maxnum_layer_in_bit)
+        self.num_dynamic_chiplet = config.num_dynamic_chiplet
+        self.logic_chiplet = Chiplet(config,chiplet_type='logic',memory_cell_type=None,maxnum_layer_in_bit=maxnum_layer_in_bit)
+
+    def CalculateArea(self):
         
-        staticChip_PErowNum = ceil(sqrt(Num_StaticPE))
-        staticChip_PEcolNum = ceil(Num_StaticPE / staticChip_PErowNum)
-        self.Area_StaticPE_Wire = StaticWire_unitLengthArea * (Static_PESize_height * staticChip_PErowNum + Static_PESize_width * staticChip_PEcolNum)
-        self.static_area = Num_StaticPE * Area_StaticPE + self.Area_StaticPE_Wire
+        # staticChip_PErowNum = ceil(sqrt(Num_StaticPE))
+        # staticChip_PEcolNum = ceil(Num_StaticPE / staticChip_PErowNum)
+        # self.Area_StaticPE_Wire = StaticWire_unitLengthArea * (Static_PESize_height * staticChip_PErowNum + Static_PESize_width * staticChip_PEcolNum)
+        # self.static_area = Num_StaticPE * Area_StaticPE + self.Area_StaticPE_Wire
 
-        dynamicChip_PErowNum = ceil(sqrt(Num_DynamicPE))
-        dynamicChip_PEcolNum = ceil(Num_DynamicPE / dynamicChip_PErowNum)
-        self.Area_DynamicPE_Wire = DynamicWire_unitLengthArea * (Dynamic_PESize_height * dynamicChip_PErowNum + Dynamic_PESize_width * dynamicChip_PEcolNum)
-        self.dynamic_area = Num_DynamicPE * Area_DynamicPE + self.Area_DynamicPE_Wire + Area_DynamicPE_sfu
-        self.area = self.static_area + self.dynamic_area + Area_logic + Area_buffer
+        # dynamicChip_PErowNum = ceil(sqrt(Num_DynamicPE))
+        # dynamicChip_PEcolNum = ceil(Num_DynamicPE / dynamicChip_PErowNum)
+        # self.Area_DynamicPE_Wire = DynamicWire_unitLengthArea * (Dynamic_PESize_height * dynamicChip_PErowNum + Dynamic_PESize_width * dynamicChip_PEcolNum)
+        # self.dynamic_area = Num_DynamicPE * Area_DynamicPE + self.Area_DynamicPE_Wire + Area_DynamicPE_sfu
+        # self.area = self.static_area + self.dynamic_area + Area_logic + Area_buffer
 
-        self.Area_Total_Wire = self.Area_StaticPE_Wire + self.Area_DynamicPE_Wire
-        return self.area
+        # self.Area_Total_Wire = self.Area_StaticPE_Wire + self.Area_DynamicPE_Wire
+        # return self.area
+
+        area = self.static_chiplet.get_area() * self.num_static_chiplet + self.dynamic_chiplet.get_area() * self.num_dynamic_chiplet + self.logic_chiplet.get_area()
+        return area
     
     def getWireLength(self, layer_trace, Num_StaticPE, Num_DynamicPE):
         PE_Loc = [] 
@@ -139,16 +150,24 @@ class Pack2D(Pack):
 
 class Pack2_5D(Pack):
     
-    def __init__(self):
-        self.Area_Total_Wire = 0
+    def __init__(self,config,maxnum_layer_in_bit):
+        # self.Area_Total_Wire = 0
 
-    def CalculateArea(self,
-            Num_StaticPE, Area_StaticPE, Area_logic,Area_buffer,
-            Num_DynamicPE, Area_DynamicPE, Area_DynamicPE_sfu):
-        self.static_area = Num_StaticPE * Area_StaticPE
-        self.dynamic_area = Num_DynamicPE * Area_DynamicPE + Area_DynamicPE_sfu
-        self.area = self.static_area + self.dynamic_area + Area_logic + Area_buffer
-        return self.area
+        self.static_chiplet = Chiplet(config,chiplet_type='static',memory_cell_type=config.static_chiplet_memory_cell_type,maxnum_layer_in_bit=maxnum_layer_in_bit)
+        self.num_static_chiplet = config.num_static_chiplet
+        self.dynamic_chiplet = Chiplet(config,chiplet_type='dynamic',memory_cell_type=config.dynamic_chiplet_memory_cell_type,maxnum_layer_in_bit=maxnum_layer_in_bit)
+        self.num_dynamic_chiplet = config.num_dynamic_chiplet
+        self.logic_chiplet = Chiplet(config,chiplet_type='logic',memory_cell_type=None,maxnum_layer_in_bit=maxnum_layer_in_bit)
+
+    def CalculateArea(self):
+        # self.static_area = Num_StaticPE * Area_StaticPE
+        # self.dynamic_area = Num_DynamicPE * Area_DynamicPE + Area_DynamicPE_sfu
+        # self.area = self.static_area + self.dynamic_area + Area_logic + Area_buffer
+        # return self.area
+
+        area = self.static_chiplet.get_area() * self.num_static_chiplet + self.dynamic_chiplet.get_area() * self.num_dynamic_chiplet + self.logic_chiplet.get_area()
+        area *= (1+0.3) # only for 2.5D, need change to addition of NoP area
+        return area
     
     def getWireLength(self, layer_trace, Num_StaticPE, Num_DynamicPE):
 
@@ -216,9 +235,10 @@ class Pack2_5D(Pack):
 
 class Pack3D(Pack):
 
-    def __init__(self,Num_StaticPE,Num_DynamicPE,Num_StaticTier,Num_DynamicTier,
+    def __init__(self,config,Num_StaticPE,Num_DynamicPE,Num_StaticTier,Num_DynamicTier,
                  StaticWire_unitLengthArea, Static_PE_height, Static_PE_width,
-                 DynamicWire_unitLengthArea, Dynamic_PE_height, Dynamic_PE_width
+                 DynamicWire_unitLengthArea, Dynamic_PE_height, Dynamic_PE_width,
+                 maxnum_layer_in_bit
                  ):
         self.tsv = TSVPath()
         self.PE_Loc = []
@@ -239,30 +259,44 @@ class Pack3D(Pack):
         self.staticChip_PErowNum = ceil(sqrt(ceil(self.Num_StaticPE / self.Num_StaticTier)))
         self.staticChip_PEcolNum = ceil(ceil(self.Num_StaticPE / self.Num_StaticTier) / self.staticChip_PErowNum)
         self.dynamicChip_PErowNum = ceil(sqrt(ceil(self.Num_DynamicPE / self.Num_DynamicTier)))
+        
+        print("self.Num_DynamicPE",self.Num_DynamicPE)
+        print("self.dynamicChip_PErowNum:",self.dynamicChip_PErowNum)
         self.dynamicChip_PEcolNum = ceil(ceil(self.Num_DynamicPE / self.Num_DynamicTier) / self.dynamicChip_PErowNum)
+        
+
+        #new
+        self.static_chiplet = Chiplet(config,chiplet_type='static',memory_cell_type=config.static_chiplet_memory_cell_type,maxnum_layer_in_bit = maxnum_layer_in_bit)
+        self.num_static_chiplet = config.num_static_chiplet
+        self.dynamic_chiplet = Chiplet(config,chiplet_type='dynamic',memory_cell_type=config.dynamic_chiplet_memory_cell_type,maxnum_layer_in_bit = maxnum_layer_in_bit)
+        self.num_dynamic_chiplet = config.num_dynamic_chiplet
+        self.logic_chiplet = Chiplet(config,chiplet_type='logic',memory_cell_type=None,maxnum_layer_in_bit = maxnum_layer_in_bit)
     
-    def CalculateArea(self,
-            Area_StaticPE, Area_logic,Area_buffer,
-            Area_DynamicPE, Area_DynamicPE_sfu
-            ):
+    def CalculateArea(self):
 
-        self.static_area = self.Num_StaticPE * Area_StaticPE + (Area_logic + Area_buffer)/2
-        self.dynamic_area = self.Num_DynamicPE * Area_DynamicPE + Area_DynamicPE_sfu + (Area_logic + Area_buffer)/2
-        Num_StaticTier_tsv = ceil(self.Num_StaticPE / self.Num_StaticTier)
-        Num_DynamicTier_tsv = ceil(self.Num_DynamicPE / self.Num_DynamicTier)
-        Area_tsv = self.tsv.CalculateArea()
+        # self.static_area = self.Num_StaticPE * Area_StaticPE + (Area_logic + Area_buffer)/2
+        # self.dynamic_area = self.Num_DynamicPE * Area_DynamicPE + Area_DynamicPE_sfu + (Area_logic + Area_buffer)/2
+        # Num_StaticTier_tsv = ceil(self.Num_StaticPE / self.Num_StaticTier)
+        # Num_DynamicTier_tsv = ceil(self.Num_DynamicPE / self.Num_DynamicTier)
+        # Area_tsv = self.tsv.CalculateArea()
 
-        self.Area_StaticPE_Wire = self.StaticWire_unitLengthArea * (self.Static_PE_height * self.staticChip_PErowNum + self.Static_PE_width * self.staticChip_PEcolNum)
-        self.Area_DynamicPE_Wire = self.DynamicWire_unitLengthArea * (self.Dynamic_PE_height * self.dynamicChip_PErowNum + self.Dynamic_PE_width * self.dynamicChip_PEcolNum)
-        # then...
+        # self.Area_StaticPE_Wire = self.StaticWire_unitLengthArea * (self.Static_PE_height * self.staticChip_PErowNum + self.Static_PE_width * self.staticChip_PEcolNum)
+        # self.Area_DynamicPE_Wire = self.DynamicWire_unitLengthArea * (self.Dynamic_PE_height * self.dynamicChip_PErowNum + self.Dynamic_PE_width * self.dynamicChip_PEcolNum)
+        # # then...
 
-        self.static_tier_area = (self.static_area + Num_StaticTier_tsv * Area_tsv + self.Area_StaticPE_Wire ) / self.Num_StaticTier
-        self.dynamic_tier_area = (self.dynamic_area + Num_DynamicTier_tsv * Area_tsv + self.Area_DynamicPE_Wire) / self.Num_DynamicTier
-        self.area = max(self.static_tier_area, self.dynamic_tier_area) # H3D
+        # self.static_tier_area = (self.static_area + Num_StaticTier_tsv * Area_tsv + self.Area_StaticPE_Wire ) / self.Num_StaticTier
+        # self.dynamic_tier_area = (self.dynamic_area + Num_DynamicTier_tsv * Area_tsv + self.Area_DynamicPE_Wire) / self.Num_DynamicTier
+        # self.area = max(self.static_tier_area, self.dynamic_tier_area) # H3D
 
-        self.Area_Total_tsv = max(Num_StaticTier_tsv * Area_tsv, Num_DynamicTier_tsv * Area_tsv)
-        self.Area_Total_Wire = max(self.Area_StaticPE_Wire,self.Area_DynamicPE_Wire)
+        # self.Area_Total_tsv = max(Num_StaticTier_tsv * Area_tsv, Num_DynamicTier_tsv * Area_tsv)
+        # self.Area_Total_Wire = max(self.Area_StaticPE_Wire,self.Area_DynamicPE_Wire)
 
+        # return self.area
+
+        # new: need add tsv,nop area, factor in stack layers
+        self.area = max(self.static_chiplet.get_area(), self.dynamic_chiplet.get_area(), self.logic_chiplet.get_area())
+        self.total_tsv_area = self.tsv.CalculateArea() * (self.logic_chiplet.buffer.mem_width + self.logic_chiplet.buffer.mem_height)
+        self.area += self.total_tsv_area
         return self.area
     
     def getPELocation(self):
