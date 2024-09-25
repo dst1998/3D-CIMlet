@@ -76,6 +76,8 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
     # chiplet_breakup_file_name = directory_name + '/chiplet_breakup.csv'
     # data = pd.read_csv(chiplet_breakup_file_name, header=None)
     # data = data.to_numpy()
+    
+    num_bits_nop_eachLayer = [0] * len(num_in_eachLayer)
 
     num_chiplets_used = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
     nop_mesh_size = math.ceil(math.sqrt(num_chiplets_used))
@@ -114,10 +116,11 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
                 # print("dst_chiplet_end:",dst_chiplet_end)
                 
                 num_activations_per_chiplet = math.ceil(num_in_eachLayer[dest_layer]*config.BitWidth_in/(num_src_chiplet*num_dst_chiplet*scale*bus_width))
+                
+                num_bits_nop_eachLayer[dest_layer] = num_in_eachLayer[dest_layer]*config.BitWidth_in
 
                 timestamp = 1
-        
-        
+
                 for packet_idx in range(1, num_activations_per_chiplet):
                     for dest_chiplet_idx in range(dst_chiplet_begin, dst_chiplet_end+1):
                         for src_chiplet_idx in range(src_chiplet_begin, src_chiplet_end+1):
@@ -139,3 +142,5 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
     os.chdir(dir_name)
     np.savetxt('nop_mesh_size.csv', [nop_mesh_size], fmt='%i')
     os.chdir("../..")
+    
+    return num_bits_nop_eachLayer

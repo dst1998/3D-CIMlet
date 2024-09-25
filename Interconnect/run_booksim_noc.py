@@ -45,7 +45,7 @@
 import os, re, glob, sys, math
 import numpy as np
 
-def run_booksim_noc(trace_file_dir):
+def run_booksim_noc(config,trace_file_dir):
 
     #os.chdir(trace_file_dir)
     #mesh_sizes_per_layer = pd.readcsv('mesh_sizes_per_layer.csv')
@@ -205,7 +205,7 @@ def run_booksim_noc(trace_file_dir):
         outfile_latency.write(str(total_latency) + '\n')
         outfile_latency.close()
         latency_file = open('/home/du335/simulator/Interconnect/logs/Latency_chiplet.csv', 'a')
-        latency_file.write('Total NoC latency is' + '\t' + str(total_latency*1e-9) + '\t' + 's' + '\n')
+        latency_file.write('Total NoC latency is' + '\t' + str(total_latency*1/config.clk_freq) + '\t' + 's' + '\n')
         latency_file.close()
     
         # Open output file handle to write power

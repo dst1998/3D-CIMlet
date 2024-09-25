@@ -14,7 +14,6 @@ class Pe:
         self.accumulator = Accumulator(config,technode)
         self.buffer = Buffer(config,technode)
         self.sfu = None
-        self.htree = Htree(config,technode,self.pe_height,self.pe_width,self.subarray_size_height,self.subarray_size_width)
         self.memory_cell_type = memory_cell_type # 'eDRAM', 'RRAM', none (acc_and_buffer)
         self.used_pe_height = None
         self.used_pe_width = None
@@ -27,8 +26,11 @@ class Pe:
             self.pe_width = config.dynamic_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode)
         
+        self.htree = Htree(config,technode,self.pe_height,self.pe_width,self.subarray.subarray_height,self.subarray_size_height,self.subarray_size_width,foldedratio=16)
+        
 
     def get_area(self):
         subarrays_area = self.subarray.get_area() * self.pe_height * self.pe_width
         area = subarrays_area + self.buffer.get_area() + self.accumulator.get_area() + self.htree.get_area()
+        print("pe area: ",area)
         return area

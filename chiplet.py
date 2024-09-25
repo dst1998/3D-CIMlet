@@ -47,4 +47,5 @@ class Chiplet:
             PEs_area = self.pe.get_area() * self.chiplet_height * self.chiplet_width
             area += PEs_area
             area += self.noc.get_area()
+        print("chip_area: ",area)
         return area

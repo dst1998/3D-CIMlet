@@ -20,8 +20,8 @@ class Subarray:
             self.subarray_width = config.dynamic_subarray_width # num of cell cols in a subarray
         self.memory_cell_type = memory_cell_type # 'eDRAM', RRAM, none (acc_and_buffer)
         if memory_cell_type == 'eDRAM':
-            self.cellSize_height = config.eDRAM_SubArray_height
-            self.cellSize_width = config.eDRAM_SubArray_width
+            self.cellSize_height = config.eDRAM_cellSize_height
+            self.cellSize_width = config.eDRAM_cellSize_width
         if memory_cell_type == 'RRAM':
             self.cellSize_height = config.RRAM_cellSize_height
             self.cellSize_width = config.RRAM_cellSize_width
@@ -31,8 +31,12 @@ class Subarray:
         cells_area = self.cellSize_height * self.cellSize_width * self.subarray_height * self.subarray_width
         used_area = 81453 * 1e-12 * (self.technode/40)**2 # Neurosim: when featuresize=40, empty_area=234096 um2, for 256*256 subarray.
         empty_area = 234096 * 1e-12 * (self.technode/40)**2 # Neurosim: when featuresize=40, empty_area=234096 um2, for all subarray height=width.
-        # area = cells_area + self.buffer.get_area() + self.accumulator.get_area()
-        area = cells_area + (used_area-cells_area)*(self.subarray_height/256) + empty_area #Neurosim
+        # area = cells_area + (used_area-cells_area)*(self.subarray_height/256) + empty_area #Neurosim
+        area = cells_area *4
+        print("cells_area: ",cells_area)
+        print("used_area: ",used_area)
+        print("empty_area: ",empty_area)
+        print("subarray area: ",area)
         return area
     def get_size_height(self):
         return math.sqrt(self.get_area())

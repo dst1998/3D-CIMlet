@@ -81,7 +81,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num
     results_directory_name = trace_directory_name
     results_directory_full_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + results_directory_name
                 
-    run_booksim_noc(trace_directory_full_path)
+    run_booksim_noc(config,trace_directory_full_path)
     if (not os.path.exists(results_directory_full_path)):
         os.makedirs(results_directory_full_path)
     

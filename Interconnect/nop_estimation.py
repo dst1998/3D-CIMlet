@@ -65,7 +65,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, used
     bus_width = config.chiplet_bus_width_2D
     num_chiplets = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
     
-    generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale)
+    num_bits_nop_eachLayer = generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale)
 
     print('Trace generation for NoP is finished')
     print('Starting to simulate the NoP trace')
@@ -81,7 +81,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, used
     # os.system('pwd')
     
     # os.system('python3 run_booksim_mesh_chiplet_nop.py ' + trace_directory_full_path + ' ' + str(bus_width))
-    run_booksim_mesh_chiplet_nop(trace_directory_full_path, bus_width)
+    run_booksim_mesh_chiplet_nop(config,trace_directory_full_path, bus_width)
     
     if (not os.path.exists(results_directory_full_path)):
         os.makedirs(results_directory_full_path)
@@ -152,7 +152,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, used
 
     print("Total energy from booksim nop_energy_file_path:", energy)
 
-    return area, latency, energy
+    return area, latency, energy, num_bits_nop_eachLayer
     
     
     # os.system('mv /home/gkrish19/SIAM_Integration/Interconnect/logs_NoP/ ' + results_directory_full_path)

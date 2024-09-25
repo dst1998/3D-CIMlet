@@ -38,7 +38,7 @@
 # Acknowledgements: Prof.Shimeng Yu and his research group for NeuroSim
 #*******************************************************************************/
 
-def NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, n_chiplet, n_bits_per_chiplet):
+def NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, n_chiplet, n_bits_all_chiplets):
     area = (area_per_lane*n_lane+clocking_area) * n_chiplet
-    energy = ebit*n_bits_per_chiplet
+    energy = ebit*n_bits_all_chiplets
     return area, energy

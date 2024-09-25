@@ -178,41 +178,86 @@ def get_static_chiplet_layers(config,Num_StaticPE_eachLayer,num_static_chiplet_e
     return chiplet_layers, chiplet_availability, num_used_chiplet,layer_location_begin_chiplet
 
 def get_dest_layers(config,net_structure):
-    num_T_layer = 1
-    num_T_head = 12
-    num_layers_per_T_layer = 3+ num_T_head*2 +3
-    dest_layers = [[] for _ in range(len(net_structure))]
-    for layer in range(len(net_structure)):
-        if (layer % num_layers_per_T_layer == 0) | (layer % num_layers_per_T_layer == 1):
-            # print("case1:")
-            # print("layer:",layer)
-            for head in range(num_T_head):
-                # print("head:",head)
-                # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
-                dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
-        if (layer % num_layers_per_T_layer == 2):
-            # print("case2:")
-            # print("layer:",layer)
-            for head in range(num_T_head):
-                dest_layers[layer].append(2+head*2 + layer)    
-                
-                
-        if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) & ( ((layer % num_layers_per_T_layer)-3)%2 ==0):
-            # print("case3:")
-            # print("layer:",layer)
-            dest_layers[layer].append(1 + layer)
-        if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) & ( ((layer % num_layers_per_T_layer)-3)%2 ==1):
-            # print("case4:")
-            # print("layer:",layer)
-            dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-3)
-        if (layer % num_layers_per_T_layer == num_layers_per_T_layer-3)| (layer % num_layers_per_T_layer == num_layers_per_T_layer-2):
-            # print("case5:")
-            # print("layer:",layer)
-            dest_layers[layer].append(layer+1)
-        if (layer % num_layers_per_T_layer == num_layers_per_T_layer-1)&(layer != len(net_structure)-1):
-            dest_layers[layer].append(layer+1)
-        if (layer % num_layers_per_T_layer == num_layers_per_T_layer-1)&(layer == len(net_structure)-1):
-            dest_layers[layer].append(0)
+    num_T_head = config.num_T_head
+    if "Transformer_inf" in config.model_filename:
+        num_layers_per_T_layer = 3+ num_T_head*2 +3
+        dest_layers = [[] for _ in range(len(net_structure))]
+        for layer in range(len(net_structure)):
+            # generate K,Q
+            if ((layer % num_layers_per_T_layer == 0)and(layer != len(net_structure)-1)) or (layer % num_layers_per_T_layer == 1):
+                # print("case1:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    # print("head:",head)
+                    # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+                    dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+            # generate V
+            if (layer % num_layers_per_T_layer == 2):
+                # print("case2:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    dest_layers[layer].append(2+head*2 + layer)      
+            # K.QT        
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==0):
+                # print("case3:")
+                # print("layer:",layer)
+                dest_layers[layer].append(1 + layer)
+            # K.QT * V
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==1):
+                # print("case4:")
+                # print("layer:",layer)
+                dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-3)
+            # head contact, ff1
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-3) or (layer % num_layers_per_T_layer == num_layers_per_T_layer-2):
+                # print("case5:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # ff2, then to next Transformer layer or final output classification
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-1):
+                dest_layers[layer].append(layer+1)
+            # final output classification weight, also last layer of whole model, go to the first layer
+            if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
+                dest_layers[layer].append(0)
+        
+        print("dest_layers:",dest_layers)
     
-    print("dest_layers:",dest_layers)
+    elif "Transformer_adapter_inf" in config.model_filename:
+        num_layers_per_T_layer = 3+ num_T_head*2 +3 +4
+        dest_layers = [[] for _ in range(len(net_structure))]
+        for layer in range(len(net_structure)):
+            # generate K,Q
+            if ((layer % num_layers_per_T_layer == 0)and(layer != len(net_structure)-1)) or (layer % num_layers_per_T_layer == 1):
+                # print("case1:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    # print("head:",head)
+                    # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+                    dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+            # generate V
+            if (layer % num_layers_per_T_layer == 2):
+                # print("case2:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    dest_layers[layer].append(2+head*2 + layer)      
+            # K.QT        
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==0):
+                # print("case3:")
+                # print("layer:",layer)
+                dest_layers[layer].append(1 + layer)
+            # K.QT * V
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==1):
+                # print("case4:")
+                # print("layer:",layer)
+                dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-7)
+            # head contact, adapter1-1,adapter1-2,ff1,ff2,adapter2-1,adapter2-2,
+            if ( num_layers_per_T_layer-7 <= layer % num_layers_per_T_layer <= num_layers_per_T_layer-1):
+                # print("case5:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # final output classification weight, also last layer of whole model, go to the first layer
+            if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
+                dest_layers[layer].append(0)
+        
+        print("dest_layers:",dest_layers)
+    
     return dest_layers

@@ -50,7 +50,7 @@ import numpy
 # bus_width = sys.argv[2] #bus width
 
 
-def run_booksim_mesh_chiplet_nop(trace_file_dir, bus_width):
+def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
 
 
     #os.chdir(trace_file_dir)
@@ -202,7 +202,7 @@ def run_booksim_mesh_chiplet_nop(trace_file_dir, bus_width):
     outfile_latency.close()
 
     latency_file = open('/home/du335/simulator/Interconnect/logs_NoP/Latency_chiplet.csv', 'a')
-    latency_file.write('Total NoP latency is' +'\t' + str(total_latency*4e-9) +'\t' + 's' + '\n') # 4??????
+    latency_file.write('Total NoP latency is' +'\t' + str(total_latency*1/config.nop_clk_freq) +'\t' + 's' + '\n') # 4??????
     latency_file.close()
     
     # Open output file handle to write latency
