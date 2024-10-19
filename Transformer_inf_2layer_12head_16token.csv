@@ -59,4 +59,4 @@ model_type,Transformer_inf,0,0,0,0,0,0,0
 16,768,768,768,16,768,0,0,"head contact,"
 16,768,768,3072,16,3072,0,0,"ff1,"
 16,3072,3072,768,16,768,0,0,"ff2,"
-16,768,768,32,16,32,0,0,"output weight projection,"
+16,768,768,32,16,32,0,1,"output weight projection,"

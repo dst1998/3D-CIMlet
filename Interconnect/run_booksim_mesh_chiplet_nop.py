@@ -126,7 +126,7 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
     
         # Open write file handle for config file
         outfile = open(config_file, 'w')
-    
+
         # Iterate over file and set size of mesh in config file
         for line in fp :
     
@@ -167,7 +167,7 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
         # Grep for packet latency average from log file
         latency = os.popen('grep "Trace is finished in" ' + log_file + ' | tail -1 | awk \'{print $5}\'').read().strip()
     
-        # print('[ INFO] Latency for Chiplet : ' + str(run_id) + ' is ' + latency +'\n')
+        print('[ INFO] Latency for Chiplet : ' + str(run_id) + ' is ' + latency +'\n')
         total_latency = total_latency + int(latency)
     
     
@@ -187,14 +187,28 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
         # Increment file counter
         file_counter += 1
     
-    # Open output file handle to write latency
+    # Open output file handle to write area
     outfile_area = open('/home/du335/simulator/Interconnect/logs_NoP/booksim_area.csv', 'a')
-    outfile_area.write(str(total_area/file_counter) + '\n')
-    outfile_area.close()
+    # outfile_area.write(str(total_area/file_counter) + '\n')
+    # outfile_area.close()
 
-    area_file = open('/home/du335/simulator/Interconnect/logs_NoP/Area_chiplet.csv', 'a')
-    area_file.write('Total NoP area is' + '\t' + str(total_area/file_counter) + '\t' + 'um^2' + '\n')
-    area_file.close()
+    # area_file = open('/home/du335/simulator/Interconnect/logs_NoP/Area_chiplet.csv', 'a')
+    # area_file.write('Total NoP area is' + '\t' + str(total_area/file_counter) + '\t' + 'um^2' + '\n')
+    # area_file.close()
+    
+    if file_counter == 0:
+        # print('No NoP for this Chiplet.')
+        outfile_area.write(str(0) + '\n')
+        outfile_area.close()
+        area_file = open('/home/du335/simulator/Interconnect/logs_NoP/Area_chiplet.csv', 'a')
+        area_file.write('Total NoP area is' + '\t' + str(0) +  '\t' + 'um^2' + '\n')
+        area_file.close()
+    else:    
+        outfile_area.write(str(total_area/file_counter) + '\n')
+        outfile_area.close()
+        area_file = open('/home/du335/simulator/Interconnect/logs_NoP/Area_chiplet.csv', 'a')
+        area_file.write('Total NoP area is' + '\t' + str(total_area/file_counter) +  '\t' + 'um^2' + '\n')
+        area_file.close()
         
     # Open output file handle to write latency
     outfile_latency = open('./logs_NoP/booksim_latency.csv', 'a')
@@ -205,11 +219,24 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
     latency_file.write('Total NoP latency is' +'\t' + str(total_latency*1/config.nop_clk_freq) +'\t' + 's' + '\n') # 4??????
     latency_file.close()
     
-    # Open output file handle to write latency
+    # Open output file handle to write power
     outfile_power = open('./logs_NoP/booksim_power.csv', 'a')
-    outfile_power.write(str(total_power/file_counter) + '\n')
-    outfile_power.close()
+    # outfile_power.write(str(total_power/file_counter) + '\n')
+    # outfile_power.close()
 
-    power_file = open('/home/du335/simulator/Interconnect/logs_NoP/Energy_chiplet.csv', 'a')
-    power_file.write('Total NoP power is' +'\t' + str(total_power/file_counter) +'\t' + 'mW' + '\n')
-    power_file.close()  
+    # power_file = open('/home/du335/simulator/Interconnect/logs_NoP/Energy_chiplet.csv', 'a')
+    # power_file.write('Total NoP power is' +'\t' + str(total_power/file_counter) +'\t' + 'mW' + '\n')
+    # power_file.close()
+    
+    if file_counter == 0:
+        outfile_power.write(str(0) + '\n')
+        outfile_power.close()
+        power_file = open('/home/du335/simulator/Interconnect/logs_NoP/Energy_chiplet.csv', 'a')
+        power_file.write('Total NoP power is' + '\t' + str(0) + '\t' + 'mW' + '\n')
+        power_file.close()
+    else:
+        outfile_power.write(str(total_power/file_counter) + '\n')
+        outfile_power.close()
+        power_file = open('/home/du335/simulator/Interconnect/logs_NoP/Energy_chiplet.csv', 'a')
+        power_file.write('Total NoP power is' + '\t' + str(total_power/file_counter) + '\t' + 'mW' + '\n')
+        power_file.close()  

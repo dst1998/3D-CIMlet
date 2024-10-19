@@ -1,7 +1,7 @@
 import pandas as pd
 import math
 
-model_layer = 2
+model_layer = 3
 head = 12
 token_len = 16
 dim = 768
@@ -32,7 +32,7 @@ for i in range(1, num_file_row+1):  # 这里我们生成10行数据，第一行�
     elif (i%num_onelayer_row == 0 and i !=0):  # ff2
         row = [token_len, dim_ff, dim_ff, dim, token_len, dim, 0, 0, "ff2,"]
     elif (i%num_onelayer_row == 1 and i == num_file_row):  # final output weight projection
-        row = [token_len, dim, dim, dim_out, token_len, dim_out, 0, 0, "output weight projection,"]
+        row = [token_len, dim, dim, dim_out, token_len, dim_out, 0, 1, "output weight projection,"]
     data.append(row)
 
 # 将数据转换为DataFrame

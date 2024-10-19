@@ -124,7 +124,7 @@ throughput change = 1
 Average latency for class 0 exceeded 500 cycles. Aborting simulation.
 Too many sample periods needed to converge
 Simulation unstable, ending ...
-Total run time 106.754
+Total run time 102.16
 L = 2 K = 8.1 M = 2 N = 1
 -----------------------------------------
 - OCN Power Summary

@@ -60,7 +60,7 @@ import shutil
 # type = 'Homogeneous Design'
 # scale = 1
 
-def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale):
+def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale):
 
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
     directory_name = '/home/du335/simulator/to_interconnect'
@@ -79,7 +79,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
     
     num_bits_nop_eachLayer = [0] * len(num_in_eachLayer)
 
-    num_chiplets_used = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
+    num_chiplets_used = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
     nop_mesh_size = math.ceil(math.sqrt(num_chiplets_used))
     
     dir_name = '/home/du335/simulator/Interconnect/' +  netname + '_NoP_traces' + '/' + type + '_' + str(num_chiplets_used) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width)
@@ -117,7 +117,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
                 
                 num_activations_per_chiplet = math.ceil(num_in_eachLayer[dest_layer]*config.BitWidth_in/(num_src_chiplet*num_dst_chiplet*scale*bus_width))
                 
-                num_bits_nop_eachLayer[dest_layer] = num_in_eachLayer[dest_layer]*config.BitWidth_in
+                num_bits_nop_eachLayer[dest_layer] += num_in_eachLayer[dest_layer]*config.BitWidth_in
 
                 timestamp = 1
 
@@ -125,8 +125,10 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dyn
                     for dest_chiplet_idx in range(dst_chiplet_begin, dst_chiplet_end+1):
                         for src_chiplet_idx in range(src_chiplet_begin, src_chiplet_end+1):
                             # trace = [trace; src_chiplet_idx-1 dest_chiplet_idx-1 timestamp]
-                            trace = np.append(trace, [[src_chiplet_idx, dest_chiplet_idx, timestamp]], axis=0)
-                            # print("5")
+                            if src_chiplet_idx != dest_chiplet_idx: 
+                                # if src_chip is dest_chip, then no need for nop
+                                trace = np.append(trace, [[src_chiplet_idx, dest_chiplet_idx, timestamp]], axis=0)
+                                # print("5")
                         if (dest_chiplet_idx != dst_chiplet_end):
                             timestamp = timestamp + 1
                         

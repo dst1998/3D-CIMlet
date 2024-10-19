@@ -67,4 +67,4 @@ model_type,Transformer_adapter_inf,0,0,0,0,0,0,0
 16,3072,3072,768,16,768,0,0,"ff2,"
 16,768,768,32,16,32,0,0,"adapter 2-1,"
 16,32,32,768,16,768,0,0,"adapter 2-2,"
-16,768,768,32,16,32,0,0,"output weight projection,"
+16,768,768,32,16,32,0,1,"output weight projection,"

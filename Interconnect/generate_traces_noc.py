@@ -59,7 +59,7 @@ import shutil
 #type = 'Homogeneous Design'
 #scale = 100
 
-def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers, layer_location_begin_chiplet, netname, chiplet_size, num_chiplets, type, scale):
+def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers,  layer_location_begin_chiplet, netname, chiplet_size, num_chiplets, type, scale):
 
 
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
@@ -120,7 +120,7 @@ def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_la
         chiplet_dir_name = 'Chiplet_' + str(chiplet_idx)
         
         os.mkdir(chiplet_dir_name)
-        
+
         for layer_idx in chiplet_layers[chiplet_idx]:
             
             for dest_layer in dest_layers[layer_idx]:
@@ -162,13 +162,60 @@ def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_la
                                 timestamp = timestamp + 1
                         timestamp = timestamp + 1
                     
-                    filename = 'trace_file_layer_' + str(layer_idx) + '.txt'
-                    
                     trace = np.delete(trace, 0, 0)
+                    filename = 'trace_file_layer_' + str(layer_idx) + '.txt'
                     os.chdir(chiplet_dir_name)
                     np.savetxt(filename, trace, fmt='%i')
                     os.chdir("..")
-    
+        
+        # for layer_idx in chiplet_layers[chiplet_idx]:    
+        #     # noc trace: in learning, weight and intermidiate activations generated in FP, transfer as weights in BP
+        #     for dest_layer in to_bp_dest_layers[layer_idx]:
+        #         if (layer_location_begin_chiplet[dest_layer] == chiplet_idx):
+            
+        #             trace = np.array([[0,0,0]])
+        #             timestamp = 1
+            
+        #             ip_activation_dest_layer = num_to_bp_transfer_byte_to_layer[dest_layer] #
+        #             num_packets_this_layer = math.ceil(ip_activation_dest_layer*config.BitWidth_in/(config.pe_bus_width_2D)) #
+        #             num_packets_this_layer = math.ceil(num_packets_this_layer/scale) #
+            
+        #             if (layer_idx == 0):
+        #                 src_pe_begin = 0
+        #             else:
+        #                 # src_pe_begin = sum(num_pes_each_layer[0:layer_idx-1])
+        #                 src_pe_begin = sum(num_pes_each_layer[0:layer_idx])
+                    
+        #             src_pe_end = src_pe_begin + num_pes_each_layer[layer_idx] - 1
+            
+        #             dest_pe_begin = sum(num_pes_each_layer[0:dest_layer])
+        #             dest_pe_end = dest_pe_begin + num_pes_each_layer[dest_layer] - 1
+            
+        #             # Normalize the number to first_pe_number
+        #             # print("src_pe_begin before subtraction with first pe number: ", src_pe_begin)
+        #             # print("first_pe_number: ", first_pe_number)
+        #             src_pe_begin = src_pe_begin - first_pe_number
+        #             # print("src_pe_begin: ", src_pe_begin)
+        #             src_pe_end = src_pe_end - first_pe_number
+        #             dest_pe_begin = dest_pe_begin - first_pe_number
+        #             dest_pe_end = dest_pe_end - first_pe_number
+            
+        #             for packet_idx in range(0, num_packets_this_layer):
+        #                 for dest_pe_idx in range(dest_pe_begin, dest_pe_end+1):
+        #                     for src_pe_idx in range(src_pe_begin, src_pe_end+1):
+        #                         trace = np.append(trace, [[src_pe_idx, dest_pe_idx, timestamp]], axis=0)
+                                
+        #                     if (dest_pe_idx != dest_pe_end):
+        #                         timestamp = timestamp + 1
+        #                 timestamp = timestamp + 1
+                  
+        #             trace = np.delete(trace, 0, 0)
+        #             filename = 'trace_file_layer_' + str(layer_idx) + '.txt'
+        #             os.chdir(chiplet_dir_name)
+        #             # 以追加模式打开文件，并保存trace
+        #             with open(filename, 'a') as f:  # 'a' 表示追加模式
+        #                 np.savetxt(f, trace, fmt='%i')
+        #             os.chdir("..")
     
     np.savetxt('mesh_size.csv', mesh_size, fmt='%i')
     os.chdir("..")

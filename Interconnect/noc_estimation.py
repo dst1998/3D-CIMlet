@@ -62,12 +62,12 @@ from Interconnect.run_booksim_noc import run_booksim_noc
 
 
 
-def interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet,num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers, layer_location_begin_chiplet, netname, chiplet_size):
+def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,chiplet_static_type,num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers, layer_location_begin_chiplet, netname, chiplet_size):
     
     type = config.type
     scale = config.scale_noc
     
-    num_chiplets = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
+    num_chiplets = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
  
     generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers, layer_location_begin_chiplet, netname, chiplet_size, num_chiplets, type, scale)
 
@@ -81,7 +81,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num
     results_directory_name = trace_directory_name
     results_directory_full_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + results_directory_name
                 
-    run_booksim_noc(config,trace_directory_full_path)
+    run_booksim_noc(config,trace_directory_full_path,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,chiplet_static_type)
     if (not os.path.exists(results_directory_full_path)):
         os.makedirs(results_directory_full_path)
     
@@ -146,6 +146,8 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num
                     power_list.append(float(parts[1]))  # Convert the second part to a float and add to the total
     
     if len(latency_list) != len(power_list):
+        print("latency_list len:",latency_list)
+        print("power_list len:",power_list)
         raise ValueError("The length of latency_list and power_list must be the same.")
     energy = sum(l * p for l, p in zip(latency_list, power_list))
 

@@ -58,14 +58,14 @@ start = timeit.default_timer()
 # bus_width = 4
 # netname = 'VGG19_homogeneous_NoP_traces'
 
-def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, netname, chiplet_size):
+def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, netname, chiplet_size):
     
     type = config.type
     scale = config.scale_nop
     bus_width = config.chiplet_bus_width_2D
-    num_chiplets = num_used_static_chiplet_all_layers + used_num_dynamic_chiplet
+    num_chiplets = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
     
-    num_bits_nop_eachLayer = generate_traces_nop(config, num_used_static_chiplet_all_layers, used_num_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale)
+    num_bits_nop_eachLayer = generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale)
 
     print('Trace generation for NoP is finished')
     print('Starting to simulate the NoP trace')

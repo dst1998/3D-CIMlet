@@ -45,7 +45,7 @@
 import os, re, glob, sys, math
 import numpy as np
 
-def run_booksim_noc(config,trace_file_dir):
+def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,chiplet_static_type):
 
     #os.chdir(trace_file_dir)
     #mesh_sizes_per_layer = pd.readcsv('mesh_sizes_per_layer.csv')
@@ -96,7 +96,11 @@ def run_booksim_noc(config,trace_file_dir):
     
     for chiplet_idx in range(0, num_chiplets):
     
-    
+        if (chiplet_idx < num_used_static_chiplet_all_layers) and (chiplet_static_type[chiplet_idx] == 0): # is static chip
+            chip_technode = config.static_chiplet_technode
+        else: # is dynamic chip or semi-static chip
+            chip_technode = config.dynamic_chiplet_technode
+            
         chiplet_directory_name = trace_file_dir + 'Chiplet_' + str(chiplet_idx)
         
         # Get a list of all files in directory
@@ -134,6 +138,9 @@ def run_booksim_noc(config,trace_file_dir):
     
             # Open write file handle for config file
             outfile = open(config_file, 'w')
+            
+            # Set the new tech file name
+            new_tech_file = 'techfile_' + str(chip_technode) + 'nm.txt'
     
             # Iterate over file and set size of mesh in config file
             for line in fp :
@@ -141,11 +148,18 @@ def run_booksim_noc(config,trace_file_dir):
                 line = line.strip()
     
                 # Search for pattern
-                matchobj = re.match(r'^k=', line)
+                matchobj1 = re.match(r'^k=', line)
     
                 # Set size of mesh if line in file corresponds to mesh size
-                if matchobj :
+                if matchobj1 :
                     line = 'k=' + str(mesh_size) + ';'
+                
+                # Search for pattern: tech_file =
+                matchobj2 = re.match(r'^tech_file = ', line)
+    
+                # Replace tech file if line in file corresponds to tech file
+                if matchobj2:
+                    line = f'tech_file = {new_tech_file};'
     
                 # Write config to file
                 outfile.write(line + '\n')
@@ -169,13 +183,13 @@ def run_booksim_noc(config,trace_file_dir):
             # Grep for packet latency average from log file
             latency = os.popen('grep "Trace is finished in" ' + log_file + ' | tail -1 | awk \'{print $5}\'').read().strip()
     
-            # print('[ INFO] Latency for Chiplet : ' + str(chiplet_idx) + ' Layer : ' + str(run_id) + ' is ' + latency +'\n')
+            print('[ INFO] Latency for Chiplet : ' + str(chiplet_idx) + ' Layer : ' + str(run_id) + ' is ' + latency +'\n')
             total_latency = total_latency + int(latency)
     
     
             power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
     
-            # print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power +'\n')
+            print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power +'\n')
             
             total_power = total_power + float(power)
     
@@ -193,6 +207,9 @@ def run_booksim_noc(config,trace_file_dir):
             # print('No NoC for this Chiplet.')
             outfile_area.write(str(0) + '\n')
             outfile_area.close()
+            area_file = open('/home/du335/simulator/Interconnect/logs/Area_chiplet.csv', 'a')
+            area_file.write('Total NoC area is' + '\t' + str(0) +  '\t' + 'um^2' + '\n')
+            area_file.close()
         else:    
             outfile_area.write(str(total_area/file_counter) + '\n')
             outfile_area.close()
@@ -214,6 +231,9 @@ def run_booksim_noc(config,trace_file_dir):
         if file_counter == 0:
             outfile_power.write(str(0) + '\n')
             outfile_power.close()
+            power_file = open('/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv', 'a')
+            power_file.write('Total NoC power is' + '\t' + str(0) + '\t' + 'mW' + '\n')
+            power_file.close()
         else:
             outfile_power.write(str(total_power/file_counter) + '\n')
             outfile_power.close()

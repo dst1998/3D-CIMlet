@@ -3,40 +3,206 @@ from wire import Wire
 import math
 # class acc,buffer,noc
 
+class ShiftAdd:
+	def __init__(self,config,technode,memory_cell_type,subarray_width):
+		self.technode = technode
+		self.clk_freq = getattr(config, memory_cell_type + '_clk_freq')
+		self.latency = 0
+		self.area = 0
+		self.latency_per_bit = 0 #not use
+		self.power_40nm = (270e-6 / 800e8 * self.clk_freq) / 256 * subarray_width # 40nm, 270uW @ 800MHz
+		if self.technode == 130:
+			self.power = self.power_40nm * 6.31
+		elif self.technode == 90:
+			self.power = self.power_40nm * 3.70
+		elif self.technode == 65:
+			self.power = self.power_40nm * 2.25
+		elif self.technode == 45:
+			self.power = self.power_40nm * 1.25
+		elif self.technode == 40:
+			self.power = self.power_40nm
+		elif self.technode == 32:
+			self.power = self.power_40nm * 7.41E-01
+		elif self.technode == 22:
+			self.power = self.power_40nm * 4.54E-01
+		elif self.technode == 14:
+			self.power = self.power_40nm * 2.56E-01
+		elif self.technode == 10:
+			self.power = self.power_40nm * 1.61E-01
+		elif self.technode == 7:
+			self.power = self.power_40nm * 9.84E-02
+		self.energy_per_bit = self.power / self.clk_freq / subarray_width # depends on power and clk_freq
+	def get_area(self):
+		return 0 # #not use
 class Accumulator:
-	def __init__(self,config,technode):
+	def __init__(self,config,technode,memory_cell_type='eDRAM',array_width=1024):
+		self.technode = technode
+		self.clk_freq = getattr(config, memory_cell_type + '_clk_freq')
+		self.power = (10e-6/ 800e8 * self.clk_freq) / 256 * array_width # 40nm, 10uW @ 800MHz
+		self.latency = 0
+		self.area = 0
+		self.latency_per_bit = 0 #not use
+		self.energy_per_bit = 2.7e-12 # depends on clk_freq
+		self.area_22nm = 4.89E-09 # from neurosim 22nm
+	def get_area(self):
+		if self.technode == 130:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(130, 2)
+		elif self.technode == 90:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(90, 2)
+		elif self.technode == 65:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(65, 2)
+		elif self.technode == 45:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(45, 2)
+		elif self.technode == 40:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(40, 2)
+		elif self.technode == 32:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(32, 2)
+		elif self.technode == 22:
+			self.area = self.area_22nm
+		elif self.technode == 14:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(14, 2)
+		elif self.technode == 10:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(10, 2)
+		elif self.technode == 7:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(7, 2)
+		return self.area
+
+class SoftmaxUnit:
+	def __init__(self,config,technode,memory_cell_type):
+		self.technode = technode
+		self.clk_freq = getattr(config, memory_cell_type + '_clk_freq')
+		self.latency_per_byte = 7e-7 /512 # input values: 512, 45nm
+		self.power_45nm = 8e-3 # input values: 512
+		self.energy_per_byte_45nm = self.latency_per_byte * self.power_45nm # depends on clk_freq
+		self.energy_per_byte = 0
+		self.area_45nm = 3.00E-07 # input values: 512
+	def get_area(self):
+		if self.technode == 130:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(130, 2)
+		elif self.technode == 90:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(90, 2)
+		elif self.technode == 65:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(65, 2)
+		elif self.technode == 45:
+			self.area = self.area_45nm
+		elif self.technode == 40:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(40, 2)
+		elif self.technode == 32:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(32, 2)
+		elif self.technode == 22:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(22, 2)
+		elif self.technode == 14:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(14, 2)
+		elif self.technode == 10:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(10, 2)
+		elif self.technode == 7:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(7, 2)
+		return self.area
+	def get_energy_per_byte(self):
+		if self.technode == 130:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 6.31
+		elif self.technode == 90:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 3.70
+		elif self.technode == 65:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 2.25
+		elif self.technode == 45:
+			self.energy_per_byte = self.energy_per_byte_45nm
+		elif self.technode == 40:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 1
+		elif self.technode == 32:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 7.41E-01
+		elif self.technode == 22:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 4.54E-01
+		elif self.technode == 14:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 2.56E-01
+		elif self.technode == 10:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 1.61E-01
+		elif self.technode == 7:
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 9.84E-02
+		return self.energy_per_byte
+
+class Buffer: # sram
+	def __init__(self,config,technode,mem_width=128,mem_height=128):
+		self.technode = technode
+		config.technode = self.technode
+		self.featureSize = config.featureSize
 		self.clk_freq = config.clk_freq
 		self.power = 0
 		self.latency = 0
 		self.area = 0
-		self.latency_per_bit = 0 #not use
-		self.energy_per_bit = 0 # depends on clk_freq
-	def get_area(self):
-		return 1e-12 # need change
-
-class SoftmaxUnit:
-	def __init__(self,config,technode):
-		self.clk_freq = config.clk_freq
-		self.latency_per_byte = 7e-7 /512 # input values: 512
-		self.power = 8e-3 # input values: 512
-		self.energy_per_byte = self.latency_per_byte * self.power # depends on clk_freq
-		self.area = 3.00E-07 # input values: 512
-	def get_area(self):
-		return self.area
-
-class Buffer:
-	def __init__(self,config,technode,mem_width=128,mem_height=128):
-		self.clk_freq = config.clk_freq
-		self.power = 1
-		self.latency = 1
-		self.area = 0
-		self.bandwidth = 3.18e12 # unit: scale from original constant:(ddr_bandwidth=370 GBps) * 1024 * 1024 * 1024 * 8bit
+		self.bandwidth = 64*self.clk_freq # 3.18e12 # unit: scale from original constant:(ddr_bandwidth=370 GBps) * 1024 * 1024 * 1024 * 8bit
 		self.energy_per_bit = 0 # depends on clk_freq
 		self.mem_width = mem_width
 		self.mem_height = mem_height
 	def get_area(self):
-		return 1e-12 # need change
-
+		# from Neurosim:
+		if self.technode >= 22:
+			cellSize = 160 * math.pow(self.technode*1e-9, 2)
+		elif self.technode == 14:
+			cellSize = 300 * math.pow(self.technode*1e-9, 2)
+		elif self.technode == 10:
+			cellSize = 400 * math.pow(self.technode*1e-9, 2)
+		elif self.technode == 7:
+			cellSize = 600 * math.pow(self.technode*1e-9, 2)
+		self.area = 1.3* self.mem_width * self.mem_height * cellSize
+		return self.area
+	def get_energy_per_bit(self):
+		# from Neurosim:
+		if self.technode == 130:
+			read_energy_per_bit = 4.41E-13
+			write_energy_per_bit = 3.66E-13
+		elif self.technode == 90:
+			read_energy_per_bit = 2.59E-13
+			write_energy_per_bit = 1.64E-13
+		elif self.technode == 65:
+			read_energy_per_bit = 1.58E-13
+			write_energy_per_bit = 1.18E-13
+		elif self.technode == 45:
+			read_energy_per_bit = 9.01E-14
+			write_energy_per_bit = 6.37E-14
+		elif self.technode == 40:
+			read_energy_per_bit = 7E-14
+			write_energy_per_bit = 5.7E-14
+		elif self.technode == 32:
+			read_energy_per_bit = 5.19E-14
+			write_energy_per_bit = 3.53E-14
+		elif self.technode == 22:
+			read_energy_per_bit = 3.18E-14
+			write_energy_per_bit = 2.08E-14
+		elif self.technode == 14:
+			read_energy_per_bit = 1.79E-14
+			write_energy_per_bit = 1.26E-14
+		elif self.technode == 10:
+			read_energy_per_bit = 1.13E-14
+			write_energy_per_bit = 8.21E-15
+		elif self.technode == 7:
+			read_energy_per_bit = 6.89E-15
+			write_energy_per_bit = 5.43E-15
+		return read_energy_per_bit, write_energy_per_bit
+	def get_leak_power(self):
+		# from Neurosim:
+		if self.technode == 130:
+			leak_power_per_cell = 3.23E-11
+		elif self.technode == 90:
+			leak_power_per_cell = 2.05E-11
+		elif self.technode == 65:
+			leak_power_per_cell = 1.36E-11
+		elif self.technode == 45:
+			leak_power_per_cell = 8.54E-12
+		elif self.technode == 40:
+			leak_power_per_cell = 7.50E-12
+		elif self.technode == 32:
+			leak_power_per_cell = 5.46E-12
+		elif self.technode == 22:
+			leak_power_per_cell = 3.55E-12
+		elif self.technode == 14:
+			leak_power_per_cell = 4.20E-12
+		elif self.technode == 10:
+			leak_power_per_cell = 3.56E-12
+		elif self.technode == 7:
+			leak_power_per_cell = 3.33E-12
+		leak_power = leak_power_per_cell * self.mem_width * self.mem_height
+		return leak_power
 class Noc:
 	def __init__(self,config,technode,chiplet_type):
 		self.clk_freq = config.clk_freq
@@ -121,11 +287,87 @@ class Htree:
 		self.skipVer = 0
 		self.totalWireLength = 0
   
-  		# from Neurosim simulation when technode=22,featuresize=40e-9,wirewidth=40
-		self.minDist = 0.000108832
-		self.resOnRep = 86357.3
-		self.capInvInput = 6.85804e-15
-		self.capInvOutput = 7.14011e-16
+  		# from Neurosim simulation:
+		if self.technode == 130:
+			# technode=130,featuresize=175e-9,wirewidth=175
+			self.minDist = 0.00169359
+			self.resOnRep = 51213.8
+			self.capInvInput = 1.16469e-13
+			self.capInvOutput = 9.6562e-15
+			self.wInv = 7.41e-06
+			self.hInv = 3.64e-06
+		elif self.technode == 90:
+			# technode=90,featuresize=110e-9,wirewidth=110
+			self.minDist = 0.000633206
+			self.resOnRep = 68149
+			self.capInvInput = 3.82481e-14
+			self.capInvOutput = 6.99952e-15
+			self.wInv = 6.498e-06
+			self.hInv = 2.52e-06
+		elif self.technode == 65:
+			# technode=65,featuresize=105e-9,wirewidth=105
+			self.minDist = 0.000681535
+			self.resOnRep = 74884.6
+			self.capInvInput = 4.66195e-14
+			self.capInvOutput = 3.48939e-15
+			self.wInv = 3.952e-06
+			self.hInv = 1.82e-06
+		elif self.technode == 45:
+			# technode=45,featuresize=80e-9,wirewidth=80
+			self.minDist = 0.000367558
+			self.resOnRep = 78635.2
+			self.capInvInput = 2.44254e-14
+			self.capInvOutput = 2.32216e-15
+			self.wInv = 2.565e-06
+			self.hInv = 1.26e-06
+		if self.technode == 40: 
+			# technode=40,featuresize=70e-9,wirewidth=70, everything from dst prediction
+			self.minDist = 0.00030
+			self.resOnRep = 80000
+			self.capInvInput = 1.8e-14
+			self.capInvOutput = 2.0e-15
+			self.wInv = 2.0e-06
+			self.hInv = 1.0e-06
+		elif self.technode == 32:
+			# technode=32,featuresize=56e-9,wirewidth=56
+			self.minDist = 0.000199978
+			self.resOnRep = 82941.1
+			self.capInvInput = 1.29872e-14
+			self.capInvOutput = 1.38083e-15
+			self.wInv = 1.5808e-06
+			self.hInv = 8.96e-07
+		elif self.technode == 22:
+			# technode=22,featuresize=40e-9,wirewidth=40
+			self.minDist = 0.000108832
+			self.resOnRep = 86357.3
+			self.capInvInput = 6.85804e-15
+			self.capInvOutput = 7.14011e-16
+			self.wInv = 1.0032e-06
+			self.hInv = 6.16e-07
+		elif self.technode == 14:
+			# technode=14,featuresize=25e-9,wirewidth=25
+			self.minDist = 4.21745e-05
+			self.resOnRep = 40168.1
+			self.capInvInput = 2.77409e-15
+			self.capInvOutput = 3.41535e-16
+			self.wInv = 3.71e-07
+			self.hInv = 3.92e-07
+		elif self.technode == 10:
+			# technode=10,featuresize=18e-9,wirewidth=18
+			self.minDist = 2.44525e-05
+			self.resOnRep = 35326.8
+			self.capInvInput = 1.69542e-15
+			self.capInvOutput = 1.23934e-16
+			self.wInv = 2.12e-07
+			self.hInv = 2.8e-07
+		elif self.technode == 7:
+			# technode=7,featuresize=18e-9,wirewidth=18
+			self.minDist = 2.23175e-05
+			self.resOnRep = 28330.8
+			self.capInvInput = 1.4951e-15
+			self.capInvOutput = 1.16067e-16
+			self.wInv = 1.113e-07
+			self.hInv = 1.96e-07
 
 	
 	def get_area(self):
@@ -133,11 +375,11 @@ class Htree:
 		# unitWidth = sqrt(subarray.get_area)
 
 		# CalculateGateArea(INV, 1, widthInvN, widthInvP, tech.featureSize * MAX_TRANSISTOR_HEIGHT, tech, &hInv, &wInv);
-		wInv=1.368e-06
+		wInv=self.wInv
   
 		MAX_TRANSISTOR_HEIGHT = 28
 		MAX_TRANSISTOR_HEIGHT_FINFET = 34
-		hInv=1.26e-06
+		hInv=self.hInv
 		if (self.featureSize <= 14 * 1e-9):  # finfet
 			hInv *= (MAX_TRANSISTOR_HEIGHT_FINFET/MAX_TRANSISTOR_HEIGHT)
 
