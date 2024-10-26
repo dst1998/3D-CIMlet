@@ -1,6 +1,6 @@
 import math,sys
 
-technode = 40
+technode = 28
 R = 606.321 # float, [Ohm] ( D1=1um Inverter)
 MetalPitch_32nm = 0.000100
 
@@ -20,11 +20,15 @@ elif technode == 45:
     vdd = 1.0
     MetalPitch = 160e-06
 elif technode == 40:
-    wireWidth = 70 # dst predict
+    wireWidth = 70
     vdd = 0.9
     MetalPitch = 120e-06
 elif technode == 32:
     wireWidth = 56
+    vdd = 0.9
+    MetalPitch = 100e-06
+elif technode == 28:
+    wireWidth = 50
     vdd = 0.9
     MetalPitch = 100e-06
 elif technode == 22:
