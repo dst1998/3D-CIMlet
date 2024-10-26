@@ -72,6 +72,7 @@ class Integration3D(Integration):
 
         # new: need add tsv,nop area, factor in stack layers
         self.area = max(self.static_chiplet.get_area(), self.dynamic_chiplet.get_area(), self.logic_chiplet.get_area())
-        self.total_tsv_area = self.tsv.CalculateArea() * (self.logic_chiplet.buffer.mem_width + self.logic_chiplet.buffer.mem_height)
+        # self.total_tsv_area = self.tsv.CalculateArea() * (self.logic_chiplet.buffer_mem_width + self.logic_chiplet.buffer_mem_height)
+        self.total_tsv_area = self.logic_chiplet.buffer.get_area()
         self.area += self.total_tsv_area
         return self.area

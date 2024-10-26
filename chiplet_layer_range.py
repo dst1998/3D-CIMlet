@@ -1,7 +1,6 @@
 import math
 import numpy as np
 import re
-from config import Config
 
 def get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer):
     static_chiplet_size = config.static_chiplet_height * config.static_chiplet_width

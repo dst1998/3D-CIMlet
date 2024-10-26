@@ -5,7 +5,6 @@ class Config:
 	def __init__(self):
 		self.model_filename = 'Transformer_adapter_inf_3layer_12head_16token.csv' # 'user_defined_example_small.csv','user_defined_example.csv', 'hdvit_changed.csv'
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
-		self.model_data = {}
 		self.NetStructure = []
 		self.NetStructure_layer_def = []
 		self.num_T_head = 12
@@ -123,6 +122,7 @@ class Config:
 		widthInFeatureSizeCrossbar = 10   
 
 		# Initialize interconnect wires
+		# def update_params(self, technode):
 		if self.technode == 130:
 			self.wireWidth = 175
 			self.featureSize = 175e-9
@@ -226,21 +226,85 @@ class Config:
 			self.unitLengthWireResistance = Rho / (self.wireWidth * 1e-9 * self.wireWidth * 1e-9 * AR)
 			wireResistanceRow = self.unitLengthWireResistance * wireLengthRow
 			wireResistanceCol = self.unitLengthWireResistance * wireLengthCol
-				
+
+	def update_params(self, technode):
+		if technode == 130:
+			self.wireWidth = 175
+			self.featureSize = 175e-9
+			self.vdd = 1.3
+			AR = 1.60
+			Rho = 2.20e-8
+		elif technode == 90:
+			self.wireWidth = 110
+			self.featureSize = 110e-9 
+			self.vdd = 1.2
+			AR = 1.60
+			Rho = 2.52e-8
+		elif technode == 65:
+			self.wireWidth = 105
+			self.featureSize = 105e-9
+			self.vdd = 1.1
+			AR = 1.70
+			Rho = 2.68e-8
+		elif technode == 45:
+			self.wireWidth = 80
+			self.featureSize = 80e-9 
+			self.vdd = 1.0
+			AR = 1.70
+			Rho = 3.31e-8
+		elif technode == 40: # need second-order calibration
+			self.wireWidth = 70 
+			self.featureSize = 70e-9 
+			self.vdd = 0.9
+			AR = 1.75 
+			Rho = 3.50e-8
+		elif technode == 32:
+			self.wireWidth = 56
+			self.featureSize = 56e-9 
+			self.vdd = 0.9
+			AR = 1.80
+			Rho = 3.70e-8
+		elif technode == 28: # need second-order calibration
+			self.wireWidth = 50 
+			self.featureSize = 50e-9 
+			self.vdd = 0.9
+			AR = 1.80 
+			Rho = 3.80e-8 
+		elif technode == 22:
+			self.wireWidth = 40
+			self.featureSize = 40e-9 
+			self.vdd = 0.85
+			AR = 1.90
+			Rho = 4.03e-8
+		elif technode == 14:
+			self.wireWidth = 25
+			self.featureSize = 25e-9 
+			self.vdd = 0.8
+			AR = 2.00
+			Rho = 5.08e-8
+		elif technode == 10:
+			self.vdd = 0.75
+			self.wireWidth = 18
+			self.featureSize = 18e-9 
+			AR = 2.00
+			Rho = 6.35e-8
+		elif technode == 7:
+			self.vdd = 0.7
+			self.wireWidth = 18
+			self.featureSize = 18e-9 
+			AR = 2.00
+			Rho = 6.35e-8
+		else:
+			self.wireWidth = -1 # Ignore wire resistance or user define
+			print("tachnode:",technode)
+			sys.exit("Wire width out of range")	
+	
 	def load_model(self):
 		try:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if first_row[1] == "Transformer":
-					for row in csv_reader:
-						if len(row) == 2:  # check if there's a key-value pair in each row
-							key, value = row[0], int(row[1])
-							self.model_data[key] = value
-						else:
-							print(f"Ignoring invalid row: {row}")
-					return self.model_data
-				elif (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft"]):
+				if (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft"]):
 					for row in csv_reader:
 						row = row[:-1]
 						converted_row = [int(item) for item in row]

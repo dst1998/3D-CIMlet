@@ -132,6 +132,7 @@ class SoftmaxUnit:
 class Buffer: # sram
 	def __init__(self,config,technode,mem_width=128,mem_height=128):
 		self.technode = technode
+		config.update_params(technode)
 		config.technode = self.technode
 		self.featureSize = config.featureSize
 		self.clk_freq = config.clk_freq
@@ -232,6 +233,7 @@ class Htree:
 		self.latency = 0
 		self.area = 0
 		self.technode = technode
+		config.update_params(technode)
 		config.technode = self.technode
 		self.vdd = config.vdd
 		self.featureSize = config.featureSize

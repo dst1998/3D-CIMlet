@@ -77,7 +77,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
     # data = pd.read_csv(chiplet_breakup_file_name, header=None)
     # data = data.to_numpy()
     
-    num_bits_nop_eachLayer = [0] * len(num_in_eachLayer)
+    num_bits_nop_eachLayer = [[0 for _ in range(len(dest_layers))] for _ in range(len(dest_layers))]
 
     num_chiplets_used = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
     nop_mesh_size = math.ceil(math.sqrt(num_chiplets_used))
@@ -133,7 +133,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
                 #     print("dest_layer",dest_layer)
                 #     print("layer 102 to this layer num_activations_per_chiplet", num_activations_per_chiplet)
                 
-                num_bits_nop_eachLayer[dest_layer] += num_in_eachLayer[dest_layer]*config.BitWidth_in
+                num_bits_nop_eachLayer[layer_idx][dest_layer] += num_in_eachLayer[dest_layer]*config.BitWidth_in
 
                 timestamp = 1
 
