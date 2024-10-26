@@ -23,6 +23,8 @@ class ShiftAdd:
 			self.power = self.power_40nm
 		elif self.technode == 32:
 			self.power = self.power_40nm * 7.41E-01
+		elif self.technode == 28: # need second-order calibration
+			self.power = self.power_40nm * 6.5E-01
 		elif self.technode == 22:
 			self.power = self.power_40nm * 4.54E-01
 		elif self.technode == 14:
@@ -57,6 +59,8 @@ class Accumulator:
 			self.area = self.area_22nm / math.pow(22, 2) * math.pow(40, 2)
 		elif self.technode == 32:
 			self.area = self.area_22nm / math.pow(22, 2) * math.pow(32, 2)
+		elif self.technode == 28:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(28, 2)
 		elif self.technode == 22:
 			self.area = self.area_22nm
 		elif self.technode == 14:
@@ -89,6 +93,8 @@ class SoftmaxUnit:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(40, 2)
 		elif self.technode == 32:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(32, 2)
+		elif self.technode == 28:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(28, 2)
 		elif self.technode == 22:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(22, 2)
 		elif self.technode == 14:
@@ -111,6 +117,8 @@ class SoftmaxUnit:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 1
 		elif self.technode == 32:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 7.41E-01
+		elif self.technode == 28: # need second-order calibration
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 6.5E-01
 		elif self.technode == 22:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 4.54E-01
 		elif self.technode == 14:
@@ -137,7 +145,7 @@ class Buffer: # sram
 	def get_area(self):
 		# from Neurosim:
 		if self.technode >= 22:
-			cellSize = 160 * math.pow(self.technode*1e-9, 2)
+			cellSize = 200 * math.pow(self.technode*1e-9, 2)
 		elif self.technode == 14:
 			cellSize = 300 * math.pow(self.technode*1e-9, 2)
 		elif self.technode == 10:
@@ -166,6 +174,9 @@ class Buffer: # sram
 		elif self.technode == 32:
 			read_energy_per_bit = 5.19E-14
 			write_energy_per_bit = 3.53E-14
+		elif self.technode == 28: # need second-order calibration
+			read_energy_per_bit = 4E-14
+			write_energy_per_bit = 3E-14
 		elif self.technode == 22:
 			read_energy_per_bit = 3.18E-14
 			write_energy_per_bit = 2.08E-14
@@ -182,17 +193,19 @@ class Buffer: # sram
 	def get_leak_power(self):
 		# from Neurosim:
 		if self.technode == 130:
-			leak_power_per_cell = 3.23E-11
+			leak_power_per_cell = 7.00E-11 # calibrated with a paper
 		elif self.technode == 90:
 			leak_power_per_cell = 2.05E-11
 		elif self.technode == 65:
-			leak_power_per_cell = 1.36E-11
+			leak_power_per_cell = 6.45E-12 # calibrated with a paper
 		elif self.technode == 45:
 			leak_power_per_cell = 8.54E-12
 		elif self.technode == 40:
-			leak_power_per_cell = 7.50E-12
+			leak_power_per_cell = 1.03E-12 # calibrated with a paper
 		elif self.technode == 32:
 			leak_power_per_cell = 5.46E-12
+		elif self.technode == 28:
+			leak_power_per_cell = 3.00E-13 # calibrated with a paper
 		elif self.technode == 22:
 			leak_power_per_cell = 3.55E-12
 		elif self.technode == 14:
@@ -321,7 +334,7 @@ class Htree:
 			self.wInv = 2.565e-06
 			self.hInv = 1.26e-06
 		if self.technode == 40: 
-			# technode=40,featuresize=70e-9,wirewidth=70, everything from dst prediction
+			# technode=40,featuresize=70e-9,wirewidth=70, need second-order calibration
 			self.minDist = 0.00030
 			self.resOnRep = 80000
 			self.capInvInput = 1.8e-14
@@ -336,6 +349,14 @@ class Htree:
 			self.capInvOutput = 1.38083e-15
 			self.wInv = 1.5808e-06
 			self.hInv = 8.96e-07
+		elif self.technode == 28:
+			# technode=28,featuresize=50e-9,wirewidth=50, need second-order calibration
+			self.minDist = 0.000175
+			self.resOnRep = 83800
+			self.capInvInput = 1.15e-14
+			self.capInvOutput = 1.20e-15
+			self.wInv = 1.45e-06
+			self.hInv = 8.30e-07
 		elif self.technode == 22:
 			# technode=22,featuresize=40e-9,wirewidth=40
 			self.minDist = 0.000108832

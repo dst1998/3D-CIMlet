@@ -61,7 +61,7 @@ import shutil
 
 def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers,  layer_location_begin_chiplet, netname, chiplet_size, num_chiplets, type, scale):
 
-
+    print("num_pes_each_layer:",num_pes_each_layer)
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
     directory_name = '/home/du335/simulator/to_interconnect'
     # pes_csv_file_name = directory_name + '/num_pes_per_layer_chiplet.csv'
@@ -137,21 +137,23 @@ def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_la
                         src_pe_begin = 0
                     else:
                         # src_pe_begin = sum(num_pes_each_layer[0:layer_idx-1])
-                        src_pe_begin = sum(num_pes_each_layer[0:layer_idx])
+                        # src_pe_begin = sum(num_pes_each_layer[0:layer_idx])
+                        src_pe_begin = sum(num_pes_each_layer[i] for i in range(layer_idx) if i in chiplet_layers[chiplet_idx])
                     
                     src_pe_end = src_pe_begin + num_pes_each_layer[layer_idx] - 1
             
-                    dest_pe_begin = sum(num_pes_each_layer[0:dest_layer])
+                    # dest_pe_begin = sum(num_pes_each_layer[0:dest_layer])
+                    dest_pe_begin = sum(num_pes_each_layer[i] for i in range(dest_layer) if i in chiplet_layers[chiplet_idx])
                     dest_pe_end = dest_pe_begin + num_pes_each_layer[dest_layer] - 1
             
                     # Normalize the number to first_pe_number
                     # print("src_pe_begin before subtraction with first pe number: ", src_pe_begin)
                     # print("first_pe_number: ", first_pe_number)
-                    src_pe_begin = src_pe_begin - first_pe_number
+                    # src_pe_begin = src_pe_begin - first_pe_number
                     # print("src_pe_begin: ", src_pe_begin)
-                    src_pe_end = src_pe_end - first_pe_number
-                    dest_pe_begin = dest_pe_begin - first_pe_number
-                    dest_pe_end = dest_pe_end - first_pe_number
+                    # src_pe_end = src_pe_end - first_pe_number
+                    # dest_pe_begin = dest_pe_begin - first_pe_number
+                    # dest_pe_end = dest_pe_end - first_pe_number
             
                     for packet_idx in range(0, num_packets_this_layer):
                         for dest_pe_idx in range(dest_pe_begin, dest_pe_end+1):

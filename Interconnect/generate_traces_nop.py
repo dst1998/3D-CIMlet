@@ -94,6 +94,17 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
     for layer_idx in range(len(num_chiplet_eachLayer)):
         # print("layer_idx:",layer_idx)
         for dest_layer in dest_layers[layer_idx]:
+            
+            # if layer_idx == 102:
+            #         print("dest_layer=",dest_layer)
+            #         print("layer_location_begin_chiplet[dest_layer]", layer_location_begin_chiplet[dest_layer])
+            #         print("layer_location_begin_chiplet[layer_idx]", layer_location_begin_chiplet[layer_idx])
+            #         print("num_used_static_chiplet_all_layers", num_used_static_chiplet_all_layers)
+                    
+            #         print("num_chiplet_eachLayer[layer_idx]", num_chiplet_eachLayer[layer_idx])
+            #         print("num_chiplet_eachLayer[dest_layer]", num_chiplet_eachLayer[dest_layer])
+            
+            
             # if the src_layer_begin_chip and dest_layer_begin_chip are not on same chip -> need NoP, or 
             # if src_layer_begin_chip and dest_layer_begin_chip are on same chip, and src_layer and dest_layer are both dynamic layers, and two layers need diff num of chips -> need NoP
             if ((layer_location_begin_chiplet[dest_layer] != layer_location_begin_chiplet[layer_idx]) | ((layer_location_begin_chiplet[dest_layer] == num_used_static_chiplet_all_layers) & (layer_location_begin_chiplet[layer_idx] == num_used_static_chiplet_all_layers) & (num_chiplet_eachLayer[layer_idx] != num_chiplet_eachLayer[dest_layer]))):
@@ -117,6 +128,11 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
                 
                 num_activations_per_chiplet = math.ceil(num_in_eachLayer[dest_layer]*config.BitWidth_in/(num_src_chiplet*num_dst_chiplet*scale*bus_width))
                 
+                # if layer_idx == 102 and dest_layer == 104:
+                # if layer_idx == 102:
+                #     print("dest_layer",dest_layer)
+                #     print("layer 102 to this layer num_activations_per_chiplet", num_activations_per_chiplet)
+                
                 num_bits_nop_eachLayer[dest_layer] += num_in_eachLayer[dest_layer]*config.BitWidth_in
 
                 timestamp = 1
@@ -134,7 +150,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
                         
                     timestamp = timestamp + 1
                     
-                filename = 'trace_file_chiplet_' + str(layer_location_begin_chiplet[layer_idx]) + '.txt'
+                filename = 'trace_file_srcL_' + str(layer_idx) +'_destL_' + str(dest_layer) + '.txt'
                 
                 trace = np.delete(trace, 0, 0)
                 os.chdir(dir_name)

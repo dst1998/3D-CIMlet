@@ -3,7 +3,7 @@ import sys
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'Transformer_adapter_cl_semi_static_3layer_12head_16token.csv' # 'user_defined_example_small.csv','user_defined_example.csv', 'hdvit_changed.csv'
+		self.model_filename = 'Transformer_adapter_inf_3layer_12head_16token.csv' # 'user_defined_example_small.csv','user_defined_example.csv', 'hdvit_changed.csv'
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
 		self.model_data = {}
 		self.NetStructure = []
@@ -13,33 +13,31 @@ class Config:
 		self.eDRAM_clk_freq = 200e6
 		self.RRAM_clk_freq = 200e6
 		self.nop_clk_freq = 8e9
-		self.SRAM_tech = 65
-		self.SRAM_height = 256
-		self.SRAM_width = 256
 
-		self.eDRAM_tech = 45
-		self.eDRAM_cellSize_height = 0.84e-6 # 0.84um
-		self.eDRAM_cellSize_width = 0.84e-6 # 0.84um
-		self.eDRAM_SubArray_height = 128  # 128*0.84um=107.52e-6
-		self.eDRAM_SubArray_width = 128   # 128*0.84um=107.52e-6
-		self.eDRAM_SubArray_latency = 1
-		self.eDRAM_SubArray_power = 1
-		self.eDRAM_SubArray_area = 1
-		self.eDRAM_PE_latency = 5e-9 # freq: 200Mhz
-		self.eDRAM_PE_dynamicEnergy = 0.385e-9 # 5.88fj/bit * 256 * 256 = 0.385e-9J, refresh? retention?
-		self.eDRAM_PE_leakPower = 0.188e-6 # cell: 2.87pW, PE: 2.87e-12 *256*256=0.188e-6
+		# eDRAM calibrated data, cell size include peripheral
+		# self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
+		self.eDRAM_cell_size_40nm = 57564 * 1E-12 / (256*128)
+		self.eDRAM_read_energy_per_bit_40nm = 0.04e-12
+		self.eDRAM_write_energy_per_bit_40nm = 0.1e-12
 
-		self.RRAM_tech = 40
-		self.RRAM_cellSize_height = 2* self.RRAM_tech * 1e-9 # 2F=2*40nm
-		self.RRAM_cellSize_width = 2* self.RRAM_tech * 1e-9 # 2F=2*40nm
-		self.RRAM_SubArray_height = 128  # 128*2F=128*2*40nm=10240e-9
-		self.RRAM_SubArray_width = 128  # 128*2F=128*2*40nm=10240e-9
-		self.RRAM_SubArray_latency = 1
-		self.RRAM_SubArray_power = 1
-		self.RRAM_SubArray_area = 1
-		self.RRAM_PE_latency = 25e-9 #read/wrte: 10~30ns
-		self.RRAM_PE_dynamicEnergy = 196.608e-9 # 3.0pJ/bit * 256 * 256 = 196.608e-9J
-		self.RRAM_PE_leakPower = 0 # [195.41uW for 256*256]
+		self.eDRAM_cell_size_28nm = 0.002769 * 1e-6 / (0.008e06)
+		self.eDRAM_read_energy_per_bit_28nm = 7.2e-12 * (1/3) * 0.155e-03 * (200/66) # refresh: 7.2e-12W/b, 66MHz (scale to 200MHz),retention time=0.155ms
+		self.eDRAM_write_energy_per_bit_28nm = 7.2e-12 * (2/3)* 0.155e-03 * (200/66) # refresh: 7.2e-12W/b, 66MHz (scale to 200MHz),retention time=0.155ms
+
+		self.eDRAM_cell_size_65nm = 0.047096688 * 1e-6 / (0.024e06)
+		self.eDRAM_read_energy_per_bit_65nm = 3.54e-03/(0.024*1024*1024) * (1/3) * 0.04e-03 # refresh: 3.54mW/0.024Mb, 200MHz,retention time=0.04ms
+		self.eDRAM_write_energy_per_bit_65nm = 3.54e-03/(0.024*1024*1024) * (2/3) * 0.04e-03 # refresh: 3.54mW/0.024Mb, 200MHz,retention time=0.04ms
+
+		self.eDRAM_cell_size_130nm = 0.268 * 1e-6 / (0.064e06)
+		self.eDRAM_read_energy_per_bit_130nm = 4.9e-03/(0.064*1024*1024) * (1/3) * 0.95e-03 # refresh: 4.9mW/0.064Mb, 200MHz,retention time=0.95ms
+		self.eDRAM_write_energy_per_bit_130nm = 4.9e-03/(0.064*1024*1024) * (2/3) * 0.95e-03 # refresh: 4.9mW/0.064Mb, 200MHz,retention time=0.95ms
+
+		# RRAM calibrated data, cell size include peripheral
+		self.RRAM_cell_size_40nm = 6.34e04 * 1e-12 / (256*256) # Luqi
+		self.RRAM_read_energy_per_bit_40nm = 0.014e-12 # Luqi
+		self.RRAM_write_energy_per_bit_40nm = 2.3e-12 # Luqi
+		# self.RRAM_read_energy_per_bit_40nm = 1e-12 # Luke
+		# self.RRAM_write_energy_per_bit_40nm = 400e-12 # Luke
 
 		# -----subarray-----
 		self.static_subarray_height = 256 # num of cell rows in a subarray
@@ -55,15 +53,15 @@ class Config:
 		self.static_pe_height = 8 # num of subarray rows in a pe
 		self.static_pe_width = 8 # num of subarray cols in a pe
 		self.static_pe_size = self.static_pe_height * self.static_pe_width
-		self.dynamic_pe_height = 4 # num of subarray rows in a pe
-		self.dynamic_pe_width = 4 # num of subarray cols in a pe
+		self.dynamic_pe_height = 8 # num of subarray rows in a pe
+		self.dynamic_pe_width = 8 # num of subarray cols in a pe
 		self.dynamic_pe_size = self.dynamic_pe_height * self.dynamic_pe_width
 
 		# -----chiplet-----
 		# -----static chiplet-----
 		self.static_chiplet_technode = 40
 		self.static_chiplet_memory_cell_type = 'RRAM'
-		self.num_static_chiplet = 16
+		self.num_static_chiplet = 20
 		self.static_chiplet_height = 8 # num of PE rows in a chiplet
 		self.static_chiplet_width = 4 # num of PE cols in a chiplet
 		self.static_chiplet_size = self.static_chiplet_height * self.static_chiplet_width
@@ -72,7 +70,7 @@ class Config:
 		self.dynamic_chiplet_technode = 40
 		self.dynamic_chiplet_memory_cell_type = 'eDRAM'
 		self.num_dynamic_chiplet = 9
-		self.dynamic_chiplet_height = 2 # num of PE rows in a chiplet
+		self.dynamic_chiplet_height = 8 # num of PE rows in a chiplet
 		self.dynamic_chiplet_width = 4 # num of PE cols in a chiplet
 		self.dynamic_chiplet_size = self.dynamic_chiplet_height * self.dynamic_chiplet_width
 		
@@ -80,17 +78,13 @@ class Config:
 		self.logic_chiplet_technode = 40
 		self.global_buffer_core_height = 128 # global buffer only in logic chiplet
 		self.global_buffer_core_width = 128 # global buffer only in logic chiplet
+		self.chip_buffer_core_height = 128
+		self.chip_buffer_core_width = 128
+		self.pe_buffer_core_height = 32 
+		self.pe_buffer_core_width = 32
 
-
-
-		self.MacType_InMemoryCompute = 1
-		self.MacType_DigitalPE = 0
-		self.Mac_tech = 40
-		self.Packaging_dimension = 3 # 2, 2.5, 3
 		self.BitWidth_in = 8
 		self.BitWidth_weight = 8
-
-		
 
 		self.pe_bus_width_2D = 32 # SIAM: 32
 		self.chiplet_bus_width_2D = 32 # SIAM: 8,16,32
@@ -98,27 +92,35 @@ class Config:
 		self.scale_nop = 10 # SIAM: 10
 		self.type = 'Homogeneous_Design'
 		
-		self.eDRAM_refresh_retention_time = 20e-6
+		self.eDRAM_refresh_retention_time_28nm = 0.155e-03
+		self.eDRAM_refresh_retention_time_40nm = 20e-6
+		self.eDRAM_refresh_retention_time_65nm = 0.04e-03
+		self.eDRAM_refresh_retention_time_130nm = 0.95e-03
+		self.RRAM_refresh_retention_time_28nm = 1e6
+		self.RRAM_refresh_retention_time_40nm = 1e6
+		self.RRAM_refresh_retention_time_65nm = 1e6
+		self.RRAM_refresh_retention_time_130nm = 1e6
+  
 		self.RRAM_refresh_retention_time = 1e6
 
-		self.Packaging_dimension = 2.5
+		self.Packaging_dimension = 2 # 2, 2.5, 3
 		
 		# from Neurosim:
 		AR = 0
 		Rho = 0
 		self.wireWidth = 0 
 		memcelltype = 'RRAM' 
-		accesstype = 1   # 假设的值
+		accesstype = 1  
 		self.temp = 300       # Temperature (K)
-		self.technode = 22 # 40:default
+		self.technode = 22 
 		self.featureSize = 40e-9    # Wire width for subArray simulation
 
-		heightInFeatureSizeSRAM = 10  # 假设值
-		widthInFeatureSizeSRAM = 10   # 假设值
-		heightInFeatureSize1T1R = 10  # 假设值
-		widthInFeatureSize1T1R = 10   # 假设值
-		heightInFeatureSizeCrossbar = 10  # 假设值
-		widthInFeatureSizeCrossbar = 10   # 假设值
+		heightInFeatureSizeSRAM = 10  
+		widthInFeatureSizeSRAM = 10   
+		heightInFeatureSize1T1R = 10  
+		widthInFeatureSize1T1R = 10   
+		heightInFeatureSizeCrossbar = 10  
+		widthInFeatureSizeCrossbar = 10   
 
 		# Initialize interconnect wires
 		if self.technode == 130:
@@ -145,18 +147,24 @@ class Config:
 			self.vdd = 1.0
 			AR = 1.70
 			Rho = 3.31e-8
-		elif self.technode == 40:
-			self.wireWidth = 70 # dst predict
+		elif self.technode == 40: # need second-order calibration
+			self.wireWidth = 70 
 			self.featureSize = 70e-9 
 			self.vdd = 0.9
-			AR = 1.75 # dst predict
-			Rho = 3.50e-8 # dst predict
+			AR = 1.75 
+			Rho = 3.50e-8
 		elif self.technode == 32:
 			self.wireWidth = 56
 			self.featureSize = 56e-9 
 			self.vdd = 0.9
 			AR = 1.80
 			Rho = 3.70e-8
+		elif self.technode == 28: # need second-order calibration
+			self.wireWidth = 50 
+			self.featureSize = 50e-9 
+			self.vdd = 0.9
+			AR = 1.80 
+			Rho = 3.80e-8 
 		elif self.technode == 22:
 			self.wireWidth = 40
 			self.featureSize = 40e-9 
@@ -232,7 +240,7 @@ class Config:
 						else:
 							print(f"Ignoring invalid row: {row}")
 					return self.model_data
-				elif (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl"]):
+				elif (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft"]):
 					for row in csv_reader:
 						row = row[:-1]
 						converted_row = [int(item) for item in row]
@@ -249,7 +257,7 @@ class Config:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl"]:
+				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl","Transformer_ft"]:
 					for row in csv_reader:
 						row_def = row[-1]
 						self.NetStructure_layer_def.append(row_def)  # Add each row to the NetStructure list1

@@ -5,7 +5,7 @@ from peripheral import *
 
 class Pe:
     def __init__(self,config,technode,chiplet_type,memory_cell_type,chip_buffer_mem_height,chip_buffer_mem_width):
-        self.chiplet_type = chiplet_type # chiplet_type = 'dynamic', static, acc_and_buffer
+        self.chiplet_type = chiplet_type # chiplet_type = dynamic, static_0, static_2, acc_and_buffer
         self.technode = technode
         self.pe_height = None
         self.pe_width = None
@@ -17,15 +17,19 @@ class Pe:
         self.used_pe_height = None
         self.used_pe_width = None
         
-        if chiplet_type == 'static':
+        if chiplet_type == 'static_0':
             self.pe_height = config.static_pe_height # num of subarray rows in a pe
             self.pe_width = config.static_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
-        if chiplet_type == 'dynamic':
+        elif chiplet_type == 'static_2':
             self.pe_height = config.dynamic_pe_height # num of subarray rows in a pe
             self.pe_width = config.dynamic_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
-        self.buffer = Buffer(config,technode,math.ceil(chip_buffer_mem_height/self.pe_height),math.ceil(chip_buffer_mem_width/self.pe_width))
+        elif chiplet_type == 'dynamic':
+            self.pe_height = config.dynamic_pe_height # num of subarray rows in a pe
+            self.pe_width = config.dynamic_pe_width # num of subarray cols in a pe
+            self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
+        self.buffer = Buffer(config,technode,math.ceil(chip_buffer_mem_height/self.pe_height/config.pe_buffer_core_height)*config.pe_buffer_core_height,math.ceil(chip_buffer_mem_width/self.pe_width/config.pe_buffer_core_width)*config.pe_buffer_core_width)
         self.accumulator = Accumulator(config,technode,memory_cell_type,self.pe_width * self.subarray.subarray_width)
         self.htree = Htree(config,technode,self.pe_height,self.pe_width,self.subarray.subarray_height,self.subarray_size_height,self.subarray_size_width,foldedratio=16)
         

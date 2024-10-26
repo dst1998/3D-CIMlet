@@ -91,7 +91,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
     
     print('finish simulate the NoP trace')
 
-    # return area
+    # return area (not used)
     area = 0.0
     nop_area_file_path = '/home/du335/simulator/Final_Results/NoP_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width) + '/logs_NoP/Area_chiplet.csv'
 
@@ -110,7 +110,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
 
     print("Total area from booksim nop_area_file_path:", area)
 
-    # return latency
+    # return latency (not used)
     latency_list = []
     nop_latency_file_path = '/home/du335/simulator/Final_Results/NoP_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width) + '/logs_NoP/Latency_chiplet.csv'
 
@@ -126,11 +126,38 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
                 if len(parts) > 1:
                     latency_list.append(float(parts[1]))  # Convert the second part to a float and add to the total
     latency_list = [latency * scale for latency in latency_list]
-    latency = sum(latency_list)
+    total_latency = sum(latency_list)
 
-    print("Total latency from booksim nop_latency_file_path:", latency)
+    print("Total latency from booksim nop_latency_file_path:", total_latency)
+    
 
-    # return energy
+    # return latencyCycle_eachLayer (used)
+    # NoP_LatencyCycle_eachLayer.csv
+    # ('NoP latency for layer' +'\t' + str(run_id) + '\t'+'is' +'\t' + str(latency) +'\t' + 'cycles' + '\n')
+    num_layers = len(num_in_eachLayer)
+    latency_eachLayer_list = [[0 for _ in range(num_layers)] for _ in range(num_layers)]
+    nop_latency_eachlayer_file_path = '/home/du335/simulator/Final_Results/NoP_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width) + '/logs_NoP/NoP_LatencyCycle_eachLayer.csv'
+
+    with open(nop_latency_eachlayer_file_path, 'r') as file:
+        for line in file:
+            # Remove surrounding whitespaces and split the line
+            line = line.strip()
+        
+            # Check if the line starts with the expected prefix
+            if line.startswith("NoP latency for layer"):
+                # Split the line and extract the numeric part
+                parts = line.split('\t')  # Split by tab character
+                if len(parts) > 4:
+                    latency = int(parts[3])
+                    # extract src_layer_idx and dest_layer_idx
+                    run_info = parts[1]  # e.g.'3_to_5'
+                    src_layer_idx, dest_layer_idx = map(int, run_info.split('_to_'))
+                    
+                    latency_eachLayer_list[src_layer_idx][dest_layer_idx] = latency
+    latency_eachLayer_list = [latency * scale for latency in latency_eachLayer_list]
+    # print("NoP latency_eachLayer_list:", latency_eachLayer_list)
+
+    # return energy (not used)
     power_list = []
     nop_power_file_path = '/home/du335/simulator/Final_Results/NoP_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width) + '/logs_NoP/Energy_chiplet.csv'
 
@@ -152,7 +179,7 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
 
     print("Total energy from booksim nop_energy_file_path:", energy)
 
-    return area, latency, energy, num_bits_nop_eachLayer
+    return area, total_latency, energy, num_bits_nop_eachLayer, latency_eachLayer_list
     
     
     # os.system('mv /home/gkrish19/SIAM_Integration/Interconnect/logs_NoP/ ' + results_directory_full_path)

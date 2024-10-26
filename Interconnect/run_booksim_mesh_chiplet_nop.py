@@ -87,6 +87,16 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
                 latency_file.truncate()  # Clear the file
     
     # Open the file and check if it has content
+    latencyCycle_eachlayer_file_path = '/home/du335/simulator/Interconnect/logs_NoP/NoP_LatencyCycle_eachLayer.csv'
+    # Check if the file exists and if it is empty
+    if os.path.exists(latencyCycle_eachlayer_file_path):
+        with open(latencyCycle_eachlayer_file_path, 'r+') as latencyCycle_eachlayer_file:
+            content = latencyCycle_eachlayer_file.read()
+            if content:  # If the file has content
+                latencyCycle_eachlayer_file.seek(0)  # Move the pointer to the beginning of the file
+                latencyCycle_eachlayer_file.truncate()  # Clear the file
+    
+    # Open the file and check if it has content
     power_file_path = '/home/du335/simulator/Interconnect/logs_NoP/Energy_chiplet.csv'
     # Check if the file exists and if it is empty
     if os.path.exists(power_file_path):
@@ -111,18 +121,24 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
     
         # Extract file name without extension and absolute path from filename
         run_name = os.path.splitext(os.path.basename(file))[0]
-        run_id = run_name.strip('trace_file_chiplet_')
+        # run_id = run_name.strip('trace_file_chiplet_')
+        match = re.search(r'trace_file_srcL_(\d+)_destL_(\d+)', run_name)
+        if match:
+            src_layer_idx = match.group(1)
+            dest_layer_idx = match.group(2)
+            run_id = f'{str(src_layer_idx)}_to_{str(dest_layer_idx)}'
     
     
         # trace file
-        trace_file_name = 'trace_file_chiplet_' + str(file_counter) + '.txt'
+        # trace_file_name = 'trace_file_chiplet_' + str(file_counter) + '.txt'
     
     
         # Open read file handle of config file
         fp = open('/home/du335/simulator/Interconnect/mesh_config_trace_based_nop', 'r')
     
         # Set path to config file
-        config_file = '/home/du335/simulator/Interconnect/logs_NoP/configs/chiplet_' + str(file_counter) + '_mesh_config'
+        # config_file = '/home/du335/simulator/Interconnect/logs_NoP/configs/chiplet_' + str(file_counter) + '_mesh_config'
+        config_file = '/home/du335/simulator/Interconnect/logs_NoP/configs/chiplets' + '_mesh_config'
     
         # Open write file handle for config file
         outfile = open(config_file, 'w')
@@ -154,9 +170,9 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
         outfile.close()
     
         # Set path to log file for trace files
-        log_file = '/home/du335/simulator/Interconnect/logs_NoP/chiplet_'  + str(run_id) + '.log'
+        log_file = '/home/du335/simulator/Interconnect/logs_NoP/layer_'  + str(run_id) + '.log'
     
-        # Copy trace file
+        # Copy trace file ( to ' trace_file.txt' as input of Booksim??)
         os.system('cp ' + file + ' trace_file.txt')
     
         # Run Booksim with config file and save log
@@ -167,14 +183,18 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
         # Grep for packet latency average from log file
         latency = os.popen('grep "Trace is finished in" ' + log_file + ' | tail -1 | awk \'{print $5}\'').read().strip()
     
-        print('[ INFO] Latency for Chiplet : ' + str(run_id) + ' is ' + latency +'\n')
+        print('[ INFO] Latency for Layer : ' + str(run_id) + ' is ' + latency +'\n')
         total_latency = total_latency + int(latency)
+        
+        # NoP latency for each two layers
+        latencyCycle_eachlayer_file = open('/home/du335/simulator/Interconnect/logs_NoP/NoP_LatencyCycle_eachLayer.csv', 'a')
+        latencyCycle_eachlayer_file.write('NoP latency for layer' +'\t' + str(run_id) + '\t'+'is' +'\t' + str(latency) +'\t' + 'cycles' + '\n')
+        latencyCycle_eachlayer_file.close()
     
     
         power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
     
-        # print('[ INFO] Power for Chiplet : '  + str(run_id) + ' is ' + power +'\n')
-        
+        print('[ INFO] Power for Layer : '  + str(run_id) + ' is ' + power +'\n')
         total_power = total_power + float(power)
     
     
@@ -216,7 +236,7 @@ def run_booksim_mesh_chiplet_nop(config,trace_file_dir, bus_width):
     outfile_latency.close()
 
     latency_file = open('/home/du335/simulator/Interconnect/logs_NoP/Latency_chiplet.csv', 'a')
-    latency_file.write('Total NoP latency is' +'\t' + str(total_latency*1/config.nop_clk_freq) +'\t' + 's' + '\n') # 4??????
+    latency_file.write('Total NoP latency is' +'\t' + str(total_latency*1/config.nop_clk_freq) +'\t' + 's' + '\n')
     latency_file.close()
     
     # Open output file handle to write power
