@@ -98,8 +98,12 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
     
         if (chiplet_idx < num_used_static_chiplet_all_layers) and (chiplet_static_type[chiplet_idx] == 0): # is static chip
             chip_technode = config.static_chiplet_technode
+            chip_memory_cell_type = getattr(config, f'static_chiplet_memory_cell_type')
+            chip_clk_freq = getattr(config, f'{chip_memory_cell_type}_clk_freq')
         else: # is dynamic chip or semi-static chip
             chip_technode = config.dynamic_chiplet_technode
+            chip_memory_cell_type = getattr(config, f'dynamic_chiplet_memory_cell_type')
+            chip_clk_freq = getattr(config, f'{chip_memory_cell_type}_clk_freq')
             
         chiplet_directory_name = trace_file_dir + 'Chiplet_' + str(chiplet_idx)
         
@@ -183,20 +187,20 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             # Grep for packet latency average from log file
             latency = os.popen('grep "Trace is finished in" ' + log_file + ' | tail -1 | awk \'{print $5}\'').read().strip()
     
-            print('[ INFO] Latency for Chiplet : ' + str(chiplet_idx) + ' Layer : ' + str(run_id) + ' is ' + latency +'\n')
+            print('[ INFO] Latency for Chiplet : ' + str(chiplet_idx) + ' Layer : ' + str(run_id) + ' is ' + latency  +'\t' + 'cycles' +'\n')
             total_latency = total_latency + int(latency)
     
     
             power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
     
-            print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power +'\n')
+            print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power + '\t' + 'mW' +'\n')
             
             total_power = total_power + float(power)
     
     
             area = os.popen('grep "Total Area" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
     
-            # print('[ INFO] Area for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + area +'\n')
+            # print('[ INFO] Area for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + area + '\t' + 'um^2' + '\n')
     
             total_area = total_area + float(area)
     
@@ -222,7 +226,7 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
         outfile_latency.write(str(total_latency) + '\n')
         outfile_latency.close()
         latency_file = open('/home/du335/simulator/Interconnect/logs/Latency_chiplet.csv', 'a')
-        latency_file.write('Total NoC latency is' + '\t' + str(total_latency*1/config.clk_freq) + '\t' + 's' + '\n')
+        latency_file.write('Total NoC latency is' + '\t' + str(total_latency*1/chip_clk_freq) + '\t' + 's' + '\n')
         latency_file.close()
     
         # Open output file handle to write power
@@ -232,16 +236,13 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             outfile_power.write(str(0) + '\n')
             outfile_power.close()
             power_file = open('/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv', 'a')
-            power_file.write('Total NoC power is' + '\t' + str(0) + '\t' + 'mW' + '\n')
+            power_file.write('Total NoC power is' + '\t' + str(0) + '\t' + 'W' + '\n')
             power_file.close()
         else:
             outfile_power.write(str(total_power/file_counter) + '\n')
             outfile_power.close()
             power_file = open('/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv', 'a')
-            power_file.write('Total NoC power is' + '\t' + str(total_power/file_counter) + '\t' + 'mW' + '\n')
+            # power_file.write('Total NoC power is' + '\t' + str(total_power/file_counter) + '\t' + 'mW' + '\n')
+            power_file.write('Total NoC power is' + '\t' + str(total_power/file_counter *1e-03) + '\t' + 'W' + '\n')
             power_file.close()
-    
-    # NoC_area = total_area/file_counter
-    # NoC_latency = total_latency
-    # NoC_power = total_power/file_counter
     

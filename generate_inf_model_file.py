@@ -3,7 +3,7 @@ import math
 
 model_layer = 3
 head = 12
-token_len = 16
+token_len = 128
 dim = 768
 dim_ff = dim*4
 dim_head = math.ceil(dim/head)

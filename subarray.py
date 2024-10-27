@@ -40,9 +40,14 @@ class Subarray:
                 self.read_energy_per_bit = config.eDRAM_read_energy_per_bit_130nm
                 self.write_energy_per_bit = config.eDRAM_write_energy_per_bit_130nm
         if memory_cell_type == 'RRAM':
-            self.cell_size = config.RRAM_cell_size_40nm
-            self.read_energy_per_bit =  config.RRAM_read_energy_per_bit_40nm
-            self.write_energy_per_bit = config.RRAM_write_energy_per_bit_40nm
+            if self.technode == 40:
+                self.cell_size = config.RRAM_cell_size_40nm
+                self.read_energy_per_bit =  config.RRAM_read_energy_per_bit_40nm
+                self.write_energy_per_bit = config.RRAM_write_energy_per_bit_40nm
+            elif self.technode == 130:
+                self.cell_size = config.eDRAM_cell_size_130nm
+                self.read_energy_per_bit =  config.eDRAM_read_energy_per_bit_130nm
+                self.write_energy_per_bit = config.eDRAM_write_energy_per_bit_130nm
             
         self.shiftadd = ShiftAdd(config,technode,self.memory_cell_type,self.subarray_width)
         

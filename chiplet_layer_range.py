@@ -283,7 +283,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
             layer_location_begin_chiplet[i] = num_used_chiplet  # update the begin chiplet idx of ith layer
     print("layer_location_begin_chiplet:",layer_location_begin_chiplet)
     
-    return chiplet_layers, chiplet_availability, num_used_chiplet,chiplet_static_type,layer_location_begin_chiplet
+    return chiplet_layers, chiplet_availability, num_used_chiplet,num_used_static_chiplet,num_used_semi_static_chiplet,chiplet_static_type,layer_location_begin_chiplet
 
 def get_dest_layers(config,net_structure,netStructure_layer_def):
     num_T_head = config.num_T_head

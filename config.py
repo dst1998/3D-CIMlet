@@ -3,15 +3,15 @@ import sys
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'Transformer_adapter_inf_3layer_12head_16token.csv' # 'user_defined_example_small.csv','user_defined_example.csv', 'hdvit_changed.csv'
+		self.model_filename = 'Transformer_inf_3layer_12head_16token.csv'
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
 		self.NetStructure = []
 		self.NetStructure_layer_def = []
 		self.num_T_head = 12
-		self.clk_freq = 800e6 # 700MHz # TODO: depends on technode and memory device type (e.g. edram or rram)
+		self.clk_freq = 800e6 # TODO: depends on technode and memory device type (e.g. edram or rram)
 		self.eDRAM_clk_freq = 200e6
-		self.RRAM_clk_freq = 200e6
-		self.nop_clk_freq = 8e9
+		self.RRAM_clk_freq = 800e6
+		self.nop_clk_freq_2d = 800e6 # 5.3e9 (MCM:pin speed)
 
 		# eDRAM calibrated data, cell size include peripheral
 		# self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
@@ -38,6 +38,11 @@ class Config:
 		# self.RRAM_read_energy_per_bit_40nm = 1e-12 # Luke
 		# self.RRAM_write_energy_per_bit_40nm = 400e-12 # Luke
 
+		self.RRAM_cell_size_130nm = 3.03 * 1e-6 / (0.0625*1e6)
+		self.RRAM_read_energy_per_bit_130nm = 1.36e-12
+		self.RRAM_write_energy_per_bit_130nm = 10e-12
+		
+
 		# -----subarray-----
 		self.static_subarray_height = 256 # num of cell rows in a subarray
 		self.static_subarray_width = 256 # num of cell cols in a subarray
@@ -58,7 +63,7 @@ class Config:
 
 		# -----chiplet-----
 		# -----static chiplet-----
-		self.static_chiplet_technode = 40
+		self.static_chiplet_technode = 40 # 40, 130
 		self.static_chiplet_memory_cell_type = 'RRAM'
 		self.num_static_chiplet = 20
 		self.static_chiplet_height = 8 # num of PE rows in a chiplet
@@ -66,7 +71,7 @@ class Config:
 		self.static_chiplet_size = self.static_chiplet_height * self.static_chiplet_width
 		
 		# -----dynamic chiplet-----
-		self.dynamic_chiplet_technode = 40
+		self.dynamic_chiplet_technode = 28 # 28,40,65,130
 		self.dynamic_chiplet_memory_cell_type = 'eDRAM'
 		self.num_dynamic_chiplet = 9
 		self.dynamic_chiplet_height = 8 # num of PE rows in a chiplet
