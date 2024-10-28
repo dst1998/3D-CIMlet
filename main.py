@@ -133,7 +133,7 @@ def main(config):
 
     # Integrate in 2D/2.5D/3D
     if config.Packaging_dimension == 2:
-        Integration = Integration2D(config,maxnum_layer_in_bit,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet)
+        Integration = Integration2D(config,maxnum_layer_in_bit,num_used_static_chiplet,num_used_semi_static_chiplet,num_used_dynamic_chiplet)
         # get chip area
         chip_area = Integration.CalculateArea()
         # NoC Estimation
@@ -176,7 +176,7 @@ def main(config):
         Integration = Integration2_5D(config,maxnum_layer_in_bit,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet)
         # get chip area
         chip_area = Integration.CalculateArea()
-        min_memory_chip_area_mm2 = 0 * 1e6
+        min_memory_chip_area_mm2 = Integration.min_memory_chip_area * 1e6
         nop_clk_freq = min_memory_chip_area_mm2 * config.nop_bw_density_2_5d
         # NoC Estimation
         noc_area, noc_latency, noc_energy = 0,0,0
@@ -229,8 +229,8 @@ def main(config):
         Integration = Integration3D(config,maxnum_layer_in_bit)
         #get chip area
         chip_area = Integration.CalculateArea()
-        min_memory_chip_area_mm2 =  0 * 1e06
-        nop_clk_freq = min_memory_chip_area_mm2 * config.nop_bw_density_3d
+        total_tsv_area_mm2 =  Integration.total_tsv_area * 1e06
+        nop_clk_freq = total_tsv_area_mm2 * config.nop_bw_density_3d
         # NoC Estimation
         noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
