@@ -165,7 +165,7 @@ def main(config):
         # NoP Hardware Cost (Nop_area:m2, NoP_energy:J)
         # 2D NoP Parameters - Extracted from GRS Nvidia (for MCM or PCB)
         ebit = 1.17e-12
-        area_per_lane = 81406E-12 / 8
+        area_per_lane = 0 # 81406E-12 / 8
         clocking_area = 0
         n_lane = config.chiplet_bus_width_2D
         n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
@@ -173,25 +173,31 @@ def main(config):
         nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
 
     elif config.Packaging_dimension == 2.5:
-        Integration = Integration2_5D(config,maxnum_layer_in_bit,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet)
+        Integration = Integration2_5D(config,maxnum_layer_in_bit,num_used_static_chiplet,num_used_semi_static_chiplet,num_used_dynamic_chiplet)
         # get chip area
         chip_area = Integration.CalculateArea()
+        
         min_memory_chip_area_mm2 = Integration.min_memory_chip_area * 1e6
-        nop_clk_freq = min_memory_chip_area_mm2 * config.nop_bw_density_2_5d
+        print("min_memory_chip_area_mm2: ", min_memory_chip_area_mm2)
+        num_pin = Integration.min_memory_chip_area / math.pow(config.pitch_size_2_5d, 2)
+        print("num_pin: ", num_pin)
+        nop_clk_freq = num_pin * config.nop_clk_freq_2_5d_3d
+        
+        
         # NoC Estimation
         noc_area, noc_latency, noc_energy = 0,0,0
         noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
         
-        noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        # noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
         if "inf" not in config.net_name:
             noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
         # NoP Estimation
         nop_area, nop_latency, nop_energy= 0,0,0
-        nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
+        nop_num_bits_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        nop_area, nop_latency, nop_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size, nop_clk_freq)
+        # nop_area, nop_latency, nop_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size, nop_clk_freq)
         print("# nop_latency:",nop_latency)
         print("# nop_latencyCycle_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_eachLayer), "cycles")
         
@@ -204,7 +210,6 @@ def main(config):
             print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
 
         nop_driver_area, nop_driver_energy = 0,0
-        
         # NoP Hardware Cost (Nop_area:m2, NoP_energy:J)
         
         # # SIAM: - Extracted from GRS Nvidia
@@ -216,34 +221,44 @@ def main(config):
         # n_bits_all_chiplets += sum(sum(row) for row in nop_num_bits_train_eachLayer)
         # nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
         
-        # # # CoWoS
-        # ebit = 0.56e-12
-        # area_per_lane = config.chiplet_bus_width_2D * (45e-6*45e-6)
-        # clocking_area = 0
-        # n_lane = 1
-        # n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
-        # n_bits_all_chiplets += sum(sum(row) for row in nop_num_bits_train_eachLayer)
-        # nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
+        # # CoWoS
+        ebit = 0.56e-12
+        area_per_lane = 0 # config.chiplet_bus_width_2D * (45e-6*45e-6)
+        clocking_area = 0
+        n_lane = 1
+        n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
+        n_bits_all_chiplets += sum(sum(row) for row in nop_num_bits_train_eachLayer)
+        nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
 
     else: # H3D
         Integration = Integration3D(config,maxnum_layer_in_bit)
         #get chip area
         chip_area = Integration.CalculateArea()
         total_tsv_area_mm2 =  Integration.total_tsv_area * 1e06
-        nop_clk_freq = total_tsv_area_mm2 * config.nop_bw_density_3d
+        print("total_tsv_area_mm2: ", total_tsv_area_mm2)
+        num_pin = Integration.num_tsv
+        print("num_pin: ", num_pin)
+        nop_clk_freq = num_pin * config.nop_clk_freq_2_5d_3d
+        
         # NoC Estimation
-        noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        noc_area, noc_latency, noc_energy = 0,0,0
+        noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
+
+        # noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        noc_area /= num_used_chiplets
         
         if "inf" not in config.net_name:
             noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+            noc_train_area /= num_used_chiplets
         
         # NoP Estimation
         nop_area, nop_latency, nop_energy = 0,0,0
         nop_num_bits_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        nop_area, nop_latency, nop_energy, nop_num_bits_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size,nop_clk_freq)
+        # nop_area, nop_latency, nop_energy, nop_num_bits_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size,nop_clk_freq)
         print("# nop_latency:",nop_latency)
         print("# nop_latencyCycle_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_eachLayer), "cycles")
+        nop_area /= num_used_chiplets
         
         nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
@@ -252,18 +267,19 @@ def main(config):
             nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer, nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
             print("# nop_train_latency:",nop_train_latency)
             print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
+            nop_train_area /= num_used_chiplets
 
         nop_driver_area, nop_driver_energy = 0,0
         # NoP Hardware Cost (Nop_area:m2, NoP_energy:J)
-        # TODO: change data 3D NoP driver
 
-        # ebit = 0.58e-12
-        # area_per_lane = 5304.5e-12 # 5304.5 um2
-        # clocking_area = 10609e-12 # 10609 um2
-        # n_lane = 32
-        # n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
-        # n_bits_all_chiplets += sum(sum(row) for row in nop_num_bits_train_eachLayer)
-        # nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
+        # # 3D SoIC F2B (SoIC bond & TSV)
+        ebit = 0.015e-12
+        area_per_lane = 0
+        clocking_area = 0
+        n_lane = 1
+        n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
+        n_bits_all_chiplets += sum(sum(row) for row in nop_num_bits_train_eachLayer)
+        nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
 
     # utilization and PPA
     static_chiplet_utilization = [(1- x/static_chiplet_size) for x in static_chiplet_availability]
@@ -271,7 +287,7 @@ def main(config):
     
     Total_Area = 0
     Total_Area += chip_area
-    Total_Area += noc_area + nop_driver_area
+    Total_Area += noc_area + nop_area
     Total_Area_mm2 = Total_Area*1e6
 
     write_latency_input_eachLayer = [layer[0] for layer in performance_each_layer]

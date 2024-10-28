@@ -75,12 +75,16 @@ class Integration3D(Integration):
         self.dynamic_chiplet = Chiplet(config,chiplet_type='dynamic',memory_cell_type=config.dynamic_chiplet_memory_cell_type,maxnum_layer_in_bit = maxnum_layer_in_bit)
 
         self.logic_chiplet = Chiplet(config,chiplet_type='logic',memory_cell_type=None,maxnum_layer_in_bit = maxnum_layer_in_bit)
+        
+        self.pitch_size_3d = config.pitch_size_3d # not used
+        self.num_tsv = self.logic_chiplet.buffer_mem_width
     
     def CalculateArea(self):
 
         # new: need add tsv,nop area, factor in stack layers
         self.area = max(self.static0_chiplet.get_area(), self.static2_chiplet.get_area(), self.dynamic_chiplet.get_area(), self.logic_chiplet.get_area())
         # self.total_tsv_area = self.tsv.CalculateArea() * (self.logic_chiplet.buffer_mem_width + self.logic_chiplet.buffer_mem_height)
-        self.total_tsv_area = self.logic_chiplet.buffer.get_area()
+        
+        self.total_tsv_area = self.tsv.CalculateArea() * self.num_tsv
         self.area += self.total_tsv_area
         return self.area

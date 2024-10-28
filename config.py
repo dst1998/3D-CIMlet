@@ -11,9 +11,13 @@ class Config:
 		self.clk_freq = 800e6 # TODO: depends on technode and memory device type (e.g. edram or rram)
 		self.eDRAM_clk_freq = 200e6
 		self.RRAM_clk_freq = 800e6
-		self.nop_clk_freq_2d = 800e6 # 5.3e9 (MCM:pin speed)
-		self.nop_bw_density_2_5d = 1.6 # Tb/s/mm2
-		self.nop_bw_density_3d = 9456 # Tb/s/mm2
+		self.nop_clk_freq_2d = 0.2E09 # 5.3e9 (MCM:pin speed)
+		self.nop_clk_freq_2_5d_3d = 0.2E09 # 0.2GHz
+		# self.nop_bw_density_2_5d = 1.6E12 # CoWoS: 1.6 Tb/s/mm2
+		# self.nop_bw_density_3d = 9456E12 # 3D SoIC F2B (SoIC bond & TSV) 9456 Tb/s/mm2
+		self.Packaging_dimension = 2 # 2, 2.5, 3
+		self.pitch_size_2_5d = 40E-06 # CoWoS
+		self.pitch_size_3d = 9E-06 # 3D SoIC F2B (SoIC bond & TSV)
 
 		# eDRAM calibrated data, cell size include peripheral
 		# self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
@@ -108,8 +112,6 @@ class Config:
 		self.RRAM_refresh_retention_time_130nm = 1e6
   
 		self.RRAM_refresh_retention_time = 1e6
-
-		self.Packaging_dimension = 2 # 2, 2.5, 3
 		
 		# from Neurosim:
 		AR = 0
