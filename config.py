@@ -12,6 +12,8 @@ class Config:
 		self.eDRAM_clk_freq = 200e6
 		self.RRAM_clk_freq = 800e6
 		self.nop_clk_freq_2d = 800e6 # 5.3e9 (MCM:pin speed)
+		self.nop_bw_density_2_5d = 1.6 # Tb/s/mm2
+		self.nop_bw_density_3d = 9456 # Tb/s/mm2
 
 		# eDRAM calibrated data, cell size include peripheral
 		# self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
@@ -33,7 +35,7 @@ class Config:
 
 		# RRAM calibrated data, cell size include peripheral
 		self.RRAM_cell_size_40nm = 6.34e04 * 1e-12 / (256*256) # Luqi
-		self.RRAM_read_energy_per_bit_40nm = 0.014e-12 # Luqi
+		self.RRAM_read_energy_per_bit_40nm = 0.14e-12 # Luqi
 		self.RRAM_write_energy_per_bit_40nm = 2.3e-12 # Luqi
 		# self.RRAM_read_energy_per_bit_40nm = 1e-12 # Luke
 		# self.RRAM_write_energy_per_bit_40nm = 400e-12 # Luke

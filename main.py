@@ -152,12 +152,12 @@ def main(config):
         print("# nop_latency:",nop_latency)
         print("# nop_latencyCycle_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_eachLayer), "cycles")
         
-        nop_area_train, nop_latency_train, nop_energy_train= 0,0,0
+        nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         if "inf" not in config.net_name:
-            nop_area_train, nop_latency_train, nop_energy_train, nop_num_bits_train_eachLayer, nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,config.nop_clk_freq_2d)
-            print("# nop_latency_train:",nop_latency_train)
+            nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer, nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,config.nop_clk_freq_2d)
+            print("# nop_train_latency:",nop_train_latency)
             print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles","cycles")
 
         nop_driver_area, nop_driver_energy = 0,0
@@ -176,6 +176,8 @@ def main(config):
         Integration = Integration2_5D(config,maxnum_layer_in_bit,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet)
         # get chip area
         chip_area = Integration.CalculateArea()
+        min_memory_chip_area_mm2 = 0 * 1e6
+        nop_clk_freq = min_memory_chip_area_mm2 * config.nop_bw_density_2_5d
         # NoC Estimation
         noc_area, noc_latency, noc_energy = 0,0,0
         noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
@@ -189,16 +191,16 @@ def main(config):
         nop_area, nop_latency, nop_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        nop_area, nop_latency, nop_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size)
+        nop_area, nop_latency, nop_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size, nop_clk_freq)
         print("# nop_latency:",nop_latency)
         print("# nop_latencyCycle_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_eachLayer), "cycles")
         
-        nop_area_train, nop_latency_train, nop_energy_train= 0,0,0
+        nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         if "inf" not in config.net_name:
-            nop_area_train, nop_latency_train, nop_energy_train, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size)
-            print("# nop_latency_train:",nop_latency_train)
+            nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
+            print("# nop_train_latency:",nop_train_latency)
             print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
 
         nop_driver_area, nop_driver_energy = 0,0
@@ -227,6 +229,8 @@ def main(config):
         Integration = Integration3D(config,maxnum_layer_in_bit)
         #get chip area
         chip_area = Integration.CalculateArea()
+        min_memory_chip_area_mm2 =  0 * 1e06
+        nop_clk_freq = min_memory_chip_area_mm2 * config.nop_bw_density_3d
         # NoC Estimation
         noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
@@ -237,16 +241,16 @@ def main(config):
         nop_area, nop_latency, nop_energy = 0,0,0
         nop_num_bits_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        nop_area, nop_latency, nop_energy, nop_num_bits_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size)
+        nop_area, nop_latency, nop_energy, nop_num_bits_eachLayer,nop_latencyCycle_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, Num_In_eachLayer, config.net_name, config.static_chiplet_size,nop_clk_freq)
         print("# nop_latency:",nop_latency)
         print("# nop_latencyCycle_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_eachLayer), "cycles")
         
-        nop_area_train, nop_latency_train, nop_energy_train= 0,0,0
+        nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         if "inf" not in config.net_name:
-            nop_area_train, nop_latency_train, nop_energy_train, nop_num_bits_train_eachLayer, nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size)
-            print("# nop_latency_train:",nop_latency_train)
+            nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer, nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
+            print("# nop_train_latency:",nop_train_latency)
             print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
 
         nop_driver_area, nop_driver_energy = 0,0
@@ -358,7 +362,7 @@ def main(config):
     Total_Energy_opt_2 = Total_Energy + total_buffer_leak_energy_weight
 
     # w/ NoC,NoP
-    Total_Energy += noc_energy + noc_train_energy + nop_energy + nop_energy_train
+    Total_Energy += noc_energy + noc_train_energy + nop_energy + nop_train_energy
     Total_Energy += nop_driver_energy
     Total_Energy_opt_1_ = Total_Energy + total_semi_static_refresh_energy_weight
     Total_Energy_opt_2_ = Total_Energy + total_buffer_leak_energy_weight
@@ -366,7 +370,7 @@ def main(config):
     Total_Latency = 0
     Total_Latency += total_latency
     Total_Latency_w_NoC = Total_Latency + noc_latency + noc_train_latency
-    Total_Latency_w_NoCNoP = Total_Latency_w_NoC + nop_latency + nop_latency_train
+    Total_Latency_w_NoCNoP = Total_Latency_w_NoC + nop_latency + nop_train_latency
     
     Total_tops = Total_top_num / Total_Latency
 
@@ -457,7 +461,7 @@ def main(config):
     print(f"NOC Area: {noc_area}, NOC Latency: {noc_latency}, NOC Energy: {noc_energy}")
     print(f"NOC Area (for train): {noc_train_area}, NOC Latency (for train): {noc_train_latency}, NOC Energy (for train): {noc_train_energy}")
     print(f"NOP Area: {nop_area}, NOP Latency: {nop_latency}, NOP Energy: {nop_energy}")
-    print(f"NOP Area (for train): {nop_area_train}, NOP Latency (for train): {nop_latency_train}, NOP Energy (for train): {nop_energy_train}")
+    print(f"NOP Area (for train): {nop_train_area}, NOP Latency (for train): {nop_train_latency}, NOP Energy (for train): {nop_train_energy}")
     print(f"NOP driver Area: {nop_driver_area}, NOP driver Energy: {nop_driver_energy}")
     
     print("==========================================")
