@@ -319,7 +319,12 @@ def main(config):
         for dest_layer_idx in (to_bp_dest_layers[layer]):
             for layer_idx in range(layer,dest_layer_idx):
                 layers_process_latency_eachDestLayer[dest_layer_idx] += total_latency_eachLayer[layer_idx]
-            if (NetStructure[dest_layer_idx][6] == 2) and (write_latency_weight_eachLayer[dest_layer_idx] > layers_process_latency_eachDestLayer[dest_layer_idx]): # semi_static layer, and need count in weight write-in latency
+
+            # count in waiting latency in a iteration of multi-batch. weight update once per iteration.
+            layers_process_latency_eachDestLayer[dest_layer_idx] += (config.train_batch_size - 1) * total_latency_eachLayer[0]
+
+            # semi_static layer, and need count in weight write-in latency
+            if (NetStructure[dest_layer_idx][6] == 2) and (write_latency_weight_eachLayer[dest_layer_idx] > layers_process_latency_eachDestLayer[dest_layer_idx]): 
                 total_latency_eachLayer[dest_layer_idx] += write_latency_weight_eachLayer[dest_layer_idx]
     # print("layers_process_latency_eachDestLayer :",layers_process_latency_eachDestLayer)
     
@@ -347,7 +352,7 @@ def main(config):
             num_refresh_times = math.ceil(layers_process_latency_eachDestLayer[layer_idx] / refresh_retention_time)
             semi_static_refresh_energy_weight_eachLayer[layer_idx] = (layer[2]*layer[3]*config.BitWidth_weight * num_refresh_times) * semi_static_chip_write_energy_per_bit
             # option 2: for each semi-static layer, weight leakage energy (stored in edram chip buffer)
-            buffer = Buffer(config,config.dynamic_chiplet_technode,mem_width=config.chip_buffer_core_width * math.ceil(layer[2]*layer[3]*config.BitWidth_weight / config.chip_buffer_core_height / config.chip_buffer_core_width) ,mem_height=config.chip_buffer_core_height)
+            buffer = Buffer(config,config.dynamic_chiplet_technode,'SRAM',mem_width=config.chip_buffer_core_width * math.ceil(layer[2]*layer[3]*config.BitWidth_weight / config.chip_buffer_core_height / config.chip_buffer_core_width) ,mem_height=config.chip_buffer_core_height)
             buffer_leak_energy_weight_eachLayer[layer_idx] = layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power()
             # buffer_leak_energy_weight_eachLayer[layer_idx] = total_latency * buffer.get_leak_power()
     

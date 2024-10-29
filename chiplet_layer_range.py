@@ -177,7 +177,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
     # print("num_used_static_chiplet:", num_used_chiplet)
 
     for chiplet_index in range(num_used_chiplet,config.num_static_chiplet):
-        chiplet_availability[chiplet_index] = config.dynamic_chiplet_height * config.dynamic_chiplet_width
+        chiplet_availability[chiplet_index] = config.static_chiplet_height * config.static_chiplet_width
     
     # go through semi-static layers
     for layer_idx, layer in enumerate(net_structure):
@@ -204,7 +204,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
                     if chiplet_index + i < len(chiplet_availability):
                         chiplet_availability[chiplet_index + i] -= pe_used_per_chiplet
                     else:
-                        print(f"Warning: chiplet_index {chiplet_index + i} out of range.")
+                        print(f"Warning: Layer {layer_idx} need {num_static_chiplet_this_layer} chip, i= {i}, chiplet_index {chiplet_index + i} out of range.")
 
                     # update chiplet_layers of this chiplet
                     chiplet_layers[chiplet_index + i].append(layer_idx)
@@ -287,7 +287,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
 
 def get_dest_layers(config,net_structure,netStructure_layer_def):
     num_T_head = config.num_T_head
-    if "Transformer_inf" in config.model_filename:
+    if any(keyword in config.model_filename for keyword in ("Transformer_inf", "BERT_base_inf")):
         num_layers_per_T_layer = 3+ num_T_head*2 +3
         dest_layers = [[] for _ in range(len(net_structure))]
         to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
@@ -331,7 +331,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
         
         print("dest_layers:",dest_layers)
     
-    elif "Transformer_adapter_inf" in config.model_filename:
+    elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_inf", "BERT_base_adapter_inf")):
         num_layers_per_T_layer = 3+ num_T_head*2 +3 +4
         dest_layers = [[] for _ in range(len(net_structure))]
         to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
@@ -372,7 +372,8 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
         
         print("dest_layers:",dest_layers)
     
-    elif "Transformer_adapter_cl" in config.model_filename:
+    elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_cl", "BERT_base_adapter_cl")):
+        
         match = re.search(r'_(\d+)layer', config.model_filename)
         if match:
             T_layer = int(match.group(1))
@@ -629,7 +630,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
         print("dest_layers:",dest_layers)
         print("to_bp_dest_layers:",to_bp_dest_layers)
     
-    elif "Transformer_ft" in config.model_filename:
+    elif any(keyword in config.model_filename for keyword in ("Transformer_ft", "BERT_base_ft")):
         match = re.search(r'_(\d+)layer', config.model_filename)
         if match:
             T_layer = int(match.group(1))

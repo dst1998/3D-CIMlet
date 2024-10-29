@@ -1,13 +1,15 @@
 import csv
 import sys
+import re
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'Transformer_adapter_cl_3layer_12head_16token.csv'
+		self.model_filename = 'BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv'
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
+		self.num_T_head = int(re.findall(r'(\d+)head', self.model_filename)[0])
+		self.train_batch_size = 32
 		self.NetStructure = []
 		self.NetStructure_layer_def = []
-		self.num_T_head = 12
 		self.clk_freq = 800e6 # TODO: depends on technode and memory device type (e.g. edram or rram)
 		self.eDRAM_clk_freq = 200e6
 		self.RRAM_clk_freq = 800e6
@@ -18,6 +20,14 @@ class Config:
 		self.Packaging_dimension = 2.5 # 2, 2.5, 3
 		self.pitch_size_2_5d = 40E-06 # CoWoS
 		self.pitch_size_3d = 9E-06 # 3D SoIC F2B (SoIC bond & TSV)
+
+		self.static2_chip_buffer_edram_portion_case = 0
+		# 0: ratio = 0, all sram
+		# 1: ratio = 1/8
+		# 2: ratio = 2/8
+		# 3: ratio = 3/8
+		# ...
+		# 8: ratio = 1, all edram
 
 		# eDRAM calibrated data, cell size include peripheral
 		# self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
@@ -53,18 +63,18 @@ class Config:
 		self.static_subarray_height = 256 # num of cell rows in a subarray
 		self.static_subarray_width = 256 # num of cell cols in a subarray
 		self.static_subarray_size = self.static_subarray_height * self.static_subarray_width
-		self.dynamic_subarray_height = 128 # num of cell rows in a subarray
-		self.dynamic_subarray_width = 128 # num of cell cols in a subarray
+		self.dynamic_subarray_height = 256 # num of cell rows in a subarray
+		self.dynamic_subarray_width = 256 # num of cell cols in a subarray
 		self.dynamic_subarray_size = self.dynamic_subarray_height * self.dynamic_subarray_width
 
 		self.subarray_readout_mux = 8
 
 		# -----pe-----
-		self.static_pe_height = 8 # num of subarray rows in a pe
-		self.static_pe_width = 8 # num of subarray cols in a pe
+		self.static_pe_height = 16 # num of subarray rows in a pe
+		self.static_pe_width = 16 # num of subarray cols in a pe
 		self.static_pe_size = self.static_pe_height * self.static_pe_width
-		self.dynamic_pe_height = 8 # num of subarray rows in a pe
-		self.dynamic_pe_width = 8 # num of subarray cols in a pe
+		self.dynamic_pe_height = 2 # num of subarray rows in a pe
+		self.dynamic_pe_width = 2 # num of subarray cols in a pe
 		self.dynamic_pe_size = self.dynamic_pe_height * self.dynamic_pe_width
 
 		# -----chiplet-----
@@ -73,15 +83,15 @@ class Config:
 		self.static_chiplet_memory_cell_type = 'RRAM'
 		self.num_static_chiplet = 20
 		self.static_chiplet_height = 8 # num of PE rows in a chiplet
-		self.static_chiplet_width = 4 # num of PE cols in a chiplet
+		self.static_chiplet_width = 8 # num of PE cols in a chiplet
 		self.static_chiplet_size = self.static_chiplet_height * self.static_chiplet_width
 		
 		# -----dynamic chiplet-----
 		self.dynamic_chiplet_technode = 28 # 28,40,65,130
 		self.dynamic_chiplet_memory_cell_type = 'eDRAM'
 		self.num_dynamic_chiplet = 9
-		self.dynamic_chiplet_height = 8 # num of PE rows in a chiplet
-		self.dynamic_chiplet_width = 4 # num of PE cols in a chiplet
+		self.dynamic_chiplet_height = 2 # num of PE rows in a chiplet
+		self.dynamic_chiplet_width = 2 # num of PE cols in a chiplet
 		self.dynamic_chiplet_size = self.dynamic_chiplet_height * self.dynamic_chiplet_width
 		
 		# -----logic chiplet-----
@@ -106,6 +116,12 @@ class Config:
 		self.eDRAM_refresh_retention_time_40nm = 20e-6
 		self.eDRAM_refresh_retention_time_65nm = 0.04e-03
 		self.eDRAM_refresh_retention_time_130nm = 0.95e-03
+
+		self.eDRAM_buffer_refresh_retention_time_28nm = 1e6 # static
+		self.eDRAM_buffer_refresh_retention_time_40nm = 4.00E-03
+		self.eDRAM_buffer_refresh_retention_time_65nm = 1.10E-04
+		self.eDRAM_buffer_refresh_retention_time_130nm = 9.50E-04
+
 		self.RRAM_refresh_retention_time_28nm = 1e6
 		self.RRAM_refresh_retention_time_40nm = 1e6
 		self.RRAM_refresh_retention_time_65nm = 1e6
@@ -313,7 +329,7 @@ class Config:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft"]):
+				if (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft","BERT_base_adapter_inf","BERT_base_adapter_cl"]):
 					for row in csv_reader:
 						row = row[:-1]
 						converted_row = [int(item) for item in row]
@@ -330,7 +346,7 @@ class Config:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl","Transformer_ft"]:
+				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl","Transformer_ft","BERT_base_adapter_inf","BERT_base_adapter_cl"]:
 					for row in csv_reader:
 						row_def = row[-1]
 						self.NetStructure_layer_def.append(row_def)  # Add each row to the NetStructure list1

@@ -1,7 +1,7 @@
 import pandas as pd
 import math
 
-model_layer = 3
+model_layer = 12
 head = 12
 token_len = 128
 dim = 768

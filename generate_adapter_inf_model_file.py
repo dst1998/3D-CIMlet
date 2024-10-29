@@ -1,22 +1,22 @@
 import pandas as pd
 import math
 
-model_layer = 3
+model_layer = 12
 head = 12
-token_len = 16
+token_len = 128
 dim = 768
 dim_ff = dim*4
 dim_head = math.ceil(dim/head)
 dim_ada = 32
-dim_out = 32 # final classification
+dim_out = 2 # final classification
 num_onelayer_row = 3+ head*2 +3 +4
 num_file_row = num_onelayer_row * model_layer +1 # +1: final output weight after all layers
-model_type = 'Transformer_adapter_inf'
+model_type = 'BERT_base_adapter_inf'
 # Define the first line of customization
 first_row = ['model_type', model_type] + [0] * 7
 
 # Initialize an empty list for storing all rows
-data = [first_row]  # 第一行自定义的内容
+data = [first_row]
 
 for i in range(1, num_file_row+1):
     if ((i%num_onelayer_row == 1 and i != num_file_row) or i%num_onelayer_row == 2 or i%num_onelayer_row == 3):  # K,Q,V projection

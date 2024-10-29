@@ -15,10 +15,10 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
         subarray_height = config.static_subarray_height
         chiplet_size = config.static_chiplet_size
     elif chiplet_type == 'static_2':
-        pe_height = config.dynamic_pe_height
-        pe_width = config.dynamic_pe_width
-        subarray_width = config.dynamic_subarray_width
-        subarray_height = config.dynamic_subarray_height
+        pe_height = config.static_pe_height
+        pe_width = config.static_pe_width
+        subarray_width = config.static_subarray_width
+        subarray_height = config.static_subarray_height
         chiplet_size = config.dynamic_chiplet_size
     elif chiplet_type == 'dynamic':
         pe_height = config.dynamic_pe_height
@@ -61,10 +61,10 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
     # chiplet: write latency and energy (chiplet buffer to PE buffer)
     # ----- write input
     write_latency_input_chiplet = this_layer_in_bit / chiplet.buffer.bandwidth
-    write_energy_input_chiplet = this_layer_in_bit * chiplet.buffer.get_energy_per_bit()[1]
+    write_energy_input_chiplet = this_layer_in_bit * chiplet.buffer.get_energy_per_bit(config)[1]
     # ----- write weight
     write_latency_weight_chiplet = this_layer_weight_bit / chiplet.buffer.bandwidth
-    write_energy_weight_chiplet = this_layer_weight_bit * chiplet.buffer.get_energy_per_bit()[1]
+    write_energy_weight_chiplet = this_layer_weight_bit * chiplet.buffer.get_energy_per_bit(config)[1]
     # ----- add to total
     # total_write_latency_input += write_latency_input_chiplet
     total_write_energy_input += write_energy_input_chiplet
@@ -107,7 +107,7 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
             num_bit_input_write_pe = (pe.used_pe_height * pe.used_pe_width) * subarray_height
             # write_latency_input_pe = num_bit_input_write_pe / subarray_height * 1/config.clk_freq # write in subarray-by-subarray, write all wordlines in a subarray simultaneously
             write_latency_input_pe = 0
-            write_energy_input_pe = num_bit_input_write_pe * pe.buffer.get_energy_per_bit()[1]
+            write_energy_input_pe = num_bit_input_write_pe * pe.buffer.get_energy_per_bit(config)[1]
             write_latency_input_subarray = 0
             write_energy_input_subarray = num_bit_input_write_pe * pe.subarray.write_energy_per_bit
             write_energy_input_pe += write_energy_input_subarray
@@ -122,7 +122,7 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
             num_bit_weight_write_pe = (pe.used_pe_width * pe.used_pe_height) * (subarray_width * subarray_height)
             # write_latency_weight_pe = pe.used_pe_width * pe.used_pe_height * subarray_height * 1/config.clk_freq # write in subarray-by-subarray
             write_latency_weight_pe = subarray_height * 1/config.clk_freq # write in subarray-by-subarray
-            write_energy_weight_pe = num_bit_weight_write_pe * pe.buffer.get_energy_per_bit()[1]
+            write_energy_weight_pe = num_bit_weight_write_pe * pe.buffer.get_energy_per_bit(config)[1]
             write_latency_weight_subarray = 0
             write_energy_weight_subarray = num_bit_weight_write_pe * pe.subarray.write_energy_per_bit
             write_energy_weight_pe += write_energy_weight_subarray
@@ -154,11 +154,11 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
             read_energy_output_pe = 0
             read_energy_output_subarrayArray = num_bit_read_pe * pe.subarray.read_energy_per_bit
             read_energy_output_subarrayShiftAdd = (row[0] * config.BitWidth_in) * pe.subarray.shiftadd.energy_per_bit
-            read_energy_output_subarraytoPeBuffer = num_bit_read_pe * pe.buffer.get_energy_per_bit()[0]
+            read_energy_output_subarraytoPeBuffer = num_bit_read_pe * pe.buffer.get_energy_per_bit(config)[0]
             read_energy_output_subarray = read_energy_output_subarrayArray + read_energy_output_subarrayShiftAdd + read_energy_output_subarraytoPeBuffer
 
             read_energy_output_peAcc = (row[0] * pe.used_pe_height * pe.used_pe_width * config.BitWidth_in) * pe.accumulator.energy_per_bit
-            read_energy_output_toPeBuffer = (row[0] * pe.used_pe_width * config.BitWidth_in) * pe.buffer.get_energy_per_bit()[0]
+            read_energy_output_toPeBuffer = (row[0] * pe.used_pe_width * config.BitWidth_in) * pe.buffer.get_energy_per_bit(config)[0]
             read_energy_output_pe_htree = pe.htree.get_energy(x_init=0, y_init=0, x_end=0, y_end=0, numBitToLoadOut=num_bit_read_pe, numBitToLoadIn=0)
             # print("read_energy_output_pe_htree=",read_energy_output_pe_htree)
 
@@ -221,7 +221,7 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
         read_latency_output_chiplet = read_latency_output_chipletAcc + read_latency_output_chipletBuffer
         # -----read output energy
         read_energy_output_chipletAcc = num_used_pe_row * row[4]*row[5]*config.BitWidth_in * chiplet.accumulator.energy_per_bit
-        read_energy_output_chipletBuffer = row[4]*row[5]*config.BitWidth_in * chiplet.buffer.get_energy_per_bit()[0]
+        read_energy_output_chipletBuffer = row[4]*row[5]*config.BitWidth_in * chiplet.buffer.get_energy_per_bit(config)[0]
         read_energy_output_chiplet = read_energy_output_chipletAcc + read_energy_output_chipletBuffer
         # ----- add to total
         # total_read_latency_output += read_latency_output_chiplet

@@ -129,8 +129,8 @@ class SoftmaxUnit:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 9.84E-02
 		return self.energy_per_byte
 
-class Buffer: # sram
-	def __init__(self,config,technode,mem_width=128,mem_height=128):
+class Buffer: # sram / edram
+	def __init__(self,config,technode,memory_type,mem_width=128,mem_height=128):
 		self.technode = technode
 		config.update_params(technode)
 		config.technode = self.technode
@@ -141,80 +141,124 @@ class Buffer: # sram
 		self.area = 0
 		self.bandwidth = 64*self.clk_freq # 3.18e12 # unit: scale from original constant:(ddr_bandwidth=370 GBps) * 1024 * 1024 * 1024 * 8bit
 		self.energy_per_bit = 0 # depends on clk_freq
+		self.memory_type = memory_type
 		self.mem_width = mem_width
 		self.mem_height = mem_height
 	def get_area(self):
-		# from Neurosim:
-		if self.technode >= 22:
-			cellSize = 200 * math.pow(self.technode*1e-9, 2)
-		elif self.technode == 14:
-			cellSize = 300 * math.pow(self.technode*1e-9, 2)
-		elif self.technode == 10:
-			cellSize = 400 * math.pow(self.technode*1e-9, 2)
-		elif self.technode == 7:
-			cellSize = 600 * math.pow(self.technode*1e-9, 2)
-		self.area = 1.3* self.mem_width * self.mem_height * cellSize
+		if self.memory_type == 'SRAM':
+			# # from Neurosim:
+			# if self.technode >= 22:
+			# 	cellSize = 200 * math.pow(self.technode*1e-9, 2)
+			# elif self.technode == 14:
+			# 	cellSize = 300 * math.pow(self.technode*1e-9, 2)
+			# elif self.technode == 10:
+			# 	cellSize = 400 * math.pow(self.technode*1e-9, 2)
+			# elif self.technode == 7:
+			# 	cellSize = 600 * math.pow(self.technode*1e-9, 2)
+			if self.technode == 130:
+				cellSize = 9.56E-12
+			elif self.technode == 65:
+				cellSize = 1.48E-12
+			elif self.technode == 40:
+				cellSize = 8.20E-13
+			elif self.technode == 28:
+				cellSize = 3.60E-13
+			self.area = 1.3* self.mem_width * self.mem_height * cellSize
+		elif self.memory_type == 'eDRAM':
+			if self.technode == 130:
+				cellSize = 4.19E-12
+			elif self.technode == 65:
+				cellSize = 7.46E-13
+			elif self.technode == 40:
+				cellSize = 5.83E-14
+			elif self.technode == 28:
+				cellSize = 2.86E-13
+			self.area = 1.3* self.mem_width * self.mem_height * cellSize
 		return self.area
-	def get_energy_per_bit(self):
-		# from Neurosim:
-		if self.technode == 130:
-			read_energy_per_bit = 4.41E-13
-			write_energy_per_bit = 3.66E-13
-		elif self.technode == 90:
-			read_energy_per_bit = 2.59E-13
-			write_energy_per_bit = 1.64E-13
-		elif self.technode == 65:
-			read_energy_per_bit = 1.58E-13
-			write_energy_per_bit = 1.18E-13
-		elif self.technode == 45:
-			read_energy_per_bit = 9.01E-14
-			write_energy_per_bit = 6.37E-14
-		elif self.technode == 40:
-			read_energy_per_bit = 7E-14
-			write_energy_per_bit = 5.7E-14
-		elif self.technode == 32:
-			read_energy_per_bit = 5.19E-14
-			write_energy_per_bit = 3.53E-14
-		elif self.technode == 28: # need second-order calibration
-			read_energy_per_bit = 4E-14
-			write_energy_per_bit = 3E-14
-		elif self.technode == 22:
-			read_energy_per_bit = 3.18E-14
-			write_energy_per_bit = 2.08E-14
-		elif self.technode == 14:
-			read_energy_per_bit = 1.79E-14
-			write_energy_per_bit = 1.26E-14
-		elif self.technode == 10:
-			read_energy_per_bit = 1.13E-14
-			write_energy_per_bit = 8.21E-15
-		elif self.technode == 7:
-			read_energy_per_bit = 6.89E-15
-			write_energy_per_bit = 5.43E-15
+	def get_energy_per_bit(self,config):
+		if self.memory_type == 'SRAM':
+			# from Neurosim:
+			if self.technode == 130:
+				read_energy_per_bit = 4.41E-13
+				write_energy_per_bit = 3.66E-13
+			elif self.technode == 90:
+				read_energy_per_bit = 2.59E-13
+				write_energy_per_bit = 1.64E-13
+			elif self.technode == 65:
+				read_energy_per_bit = 1.58E-13
+				write_energy_per_bit = 1.18E-13
+			elif self.technode == 45:
+				read_energy_per_bit = 9.01E-14
+				write_energy_per_bit = 6.37E-14
+			elif self.technode == 40:
+				read_energy_per_bit = 7E-14
+				write_energy_per_bit = 5.7E-14
+			elif self.technode == 32:
+				read_energy_per_bit = 5.19E-14
+				write_energy_per_bit = 3.53E-14
+			elif self.technode == 28: # need second-order calibration
+				read_energy_per_bit = 4E-14
+				write_energy_per_bit = 3E-14
+			elif self.technode == 22:
+				read_energy_per_bit = 3.18E-14
+				write_energy_per_bit = 2.08E-14
+			elif self.technode == 14:
+				read_energy_per_bit = 1.79E-14
+				write_energy_per_bit = 1.26E-14
+			elif self.technode == 10:
+				read_energy_per_bit = 1.13E-14
+				write_energy_per_bit = 8.21E-15
+			elif self.technode == 7:
+				read_energy_per_bit = 6.89E-15
+				write_energy_per_bit = 5.43E-15
+		elif self.memory_type == 'eDRAM':
+			if self.technode == 130:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_130nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_130nm
+			elif self.technode == 65:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_65nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_65nm
+			elif self.technode == 40:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_40nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_40nm
+			elif self.technode == 28:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_28nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_28nm
 		return read_energy_per_bit, write_energy_per_bit
 	def get_leak_power(self):
-		# from Neurosim:
-		if self.technode == 130:
-			leak_power_per_cell = 7.00E-11 # calibrated with a paper
-		elif self.technode == 90:
-			leak_power_per_cell = 2.05E-11
-		elif self.technode == 65:
-			leak_power_per_cell = 6.45E-12 # calibrated with a paper
-		elif self.technode == 45:
-			leak_power_per_cell = 8.54E-12
-		elif self.technode == 40:
-			leak_power_per_cell = 1.03E-12 # calibrated with a paper
-		elif self.technode == 32:
-			leak_power_per_cell = 5.46E-12
-		elif self.technode == 28:
-			leak_power_per_cell = 3.00E-13 # calibrated with a paper
-		elif self.technode == 22:
-			leak_power_per_cell = 3.55E-12
-		elif self.technode == 14:
-			leak_power_per_cell = 4.20E-12
-		elif self.technode == 10:
-			leak_power_per_cell = 3.56E-12
-		elif self.technode == 7:
-			leak_power_per_cell = 3.33E-12
+		if self.memory_type == 'SRAM':
+			# from Neurosim:
+			if self.technode == 130:
+				leak_power_per_cell = 7.00E-11 # calibrated with a paper
+			elif self.technode == 90:
+				leak_power_per_cell = 2.05E-11
+			elif self.technode == 65:
+				leak_power_per_cell = 6.45E-12 # calibrated with a paper
+			elif self.technode == 45:
+				leak_power_per_cell = 8.54E-12
+			elif self.technode == 40:
+				leak_power_per_cell = 1.03E-12 # calibrated with a paper
+			elif self.technode == 32:
+				leak_power_per_cell = 5.46E-12
+			elif self.technode == 28:
+				leak_power_per_cell = 3.00E-13 # calibrated with a paper
+			elif self.technode == 22:
+				leak_power_per_cell = 3.55E-12
+			elif self.technode == 14:
+				leak_power_per_cell = 4.20E-12
+			elif self.technode == 10:
+				leak_power_per_cell = 3.56E-12
+			elif self.technode == 7:
+				leak_power_per_cell = 3.33E-12
+		elif self.memory_type == 'eDRAM':
+			if self.technode == 130:
+				leak_power_per_cell = 4.87E-08 # calibrated with a paper
+			elif self.technode == 65:
+				leak_power_per_cell = 1.13E-09 # calibrated with a paper
+			elif self.technode == 40:
+				leak_power_per_cell = 25E-15 # calibrated with a paper
+			elif self.technode == 28:
+				leak_power_per_cell = 2.2E-09 # calibrated with a paper
 		leak_power = leak_power_per_cell * self.mem_width * self.mem_height
 		return leak_power
 class Noc:
@@ -513,7 +557,7 @@ class Htree:
 		wireLengthH = self.unitWidth*pow(2, (self.numStage-1)/2)    # first horizontal stage (despite of main bus)
 		numRepeater = 0
 		# resOnRep = CalculateOnResistance(widthInvN, NMOS, inputParameter.temperature, tech, M3D) + CalculateOnResistance(widthInvP, PMOS, inputParameter.temperature, tech, M3D);
-		
+
 		if (((not x_init) & (not y_init)) | ((not x_end) & (not y_end))): # root-leaf communicate (fixed addr)
 			for i in range(1, (self.numStage - 1) // 2): # ignore main bus here, but need to count until last stage (diff from area calculation)
 				wireWidth, unitLengthWireResistance = 0.0,0.0
@@ -541,6 +585,8 @@ class Htree:
 					readLatency += wireLengthH*unitLatencyWire
 			
 			#*** main bus ***#
+			if (self.numStage - 1) // 2 <=1: # did not go into for loop above
+				unitLatencyRep = 0
 			readLatency += min(self.numCol-self.x_center, self.x_center)*self.unitWidth*unitLatencyRep
 		readLatency *= numRead
 		self.latency = readLatency

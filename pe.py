@@ -29,7 +29,7 @@ class Pe:
             self.pe_height = config.dynamic_pe_height # num of subarray rows in a pe
             self.pe_width = config.dynamic_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
-        self.buffer = Buffer(config,technode,math.ceil(chip_buffer_mem_height/self.pe_height/config.pe_buffer_core_height)*config.pe_buffer_core_height,math.ceil(chip_buffer_mem_width/self.pe_width/config.pe_buffer_core_width)*config.pe_buffer_core_width)
+        self.buffer = Buffer(config,technode,'SRAM',math.ceil(chip_buffer_mem_height/self.pe_height/config.pe_buffer_core_height)*config.pe_buffer_core_height,math.ceil(chip_buffer_mem_width/self.pe_width/config.pe_buffer_core_width)*config.pe_buffer_core_width)
         self.accumulator = Accumulator(config,technode,memory_cell_type,self.pe_width * self.subarray.subarray_width)
         self.htree = Htree(config,technode,self.pe_height,self.pe_width,self.subarray.subarray_height,self.subarray_size_height,self.subarray_size_width,foldedratio=16)
         
