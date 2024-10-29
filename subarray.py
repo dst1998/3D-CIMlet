@@ -16,8 +16,8 @@ class Subarray:
             self.subarray_height = config.static_subarray_height # num of cell rows in a subarray
             self.subarray_width = config.static_subarray_width # num of cell cols in a subarray
         elif chiplet_type == 'static_2':
-            self.subarray_height = config.dynamic_subarray_height # num of cell rows in a subarray
-            self.subarray_width = config.dynamic_subarray_width # num of cell cols in a subarray
+            self.subarray_height = config.static_subarray_height # num of cell rows in a subarray
+            self.subarray_width = config.static_subarray_width # num of cell cols in a subarray
         elif chiplet_type == 'dynamic':
             self.subarray_height = config.dynamic_subarray_height # num of cell rows in a subarray
             self.subarray_width = config.dynamic_subarray_width # num of cell cols in a subarray

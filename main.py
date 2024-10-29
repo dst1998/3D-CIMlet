@@ -13,7 +13,7 @@ def main(config):
     
     NetStructure = config.load_model()
     NetStructure_layer_def  = config.load_model_layer_def()
-    print("layerdef:",NetStructure_layer_def)
+    # print("layerdef:",NetStructure_layer_def)
     static_chiplet_size = config.static_chiplet_size
     dynamic_chiplet_size = config.dynamic_chiplet_size
     
@@ -190,8 +190,8 @@ def main(config):
         
         # noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
-        if "inf" not in config.net_name:
-            noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        # if "inf" not in config.net_name:
+        #     noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
         # NoP Estimation
         nop_area, nop_latency, nop_energy= 0,0,0
@@ -204,10 +204,10 @@ def main(config):
         nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        if "inf" not in config.net_name:
-            nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
-            print("# nop_train_latency:",nop_train_latency)
-            print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
+        # if "inf" not in config.net_name:
+        #     nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
+        #     print("# nop_train_latency:",nop_train_latency)
+        #     print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles")
 
         nop_driver_area, nop_driver_energy = 0,0
         # NoP Hardware Cost (Nop_area:m2, NoP_energy:J)
@@ -321,6 +321,7 @@ def main(config):
                 layers_process_latency_eachDestLayer[dest_layer_idx] += total_latency_eachLayer[layer_idx]
             if (NetStructure[dest_layer_idx][6] == 2) and (write_latency_weight_eachLayer[dest_layer_idx] > layers_process_latency_eachDestLayer[dest_layer_idx]): # semi_static layer, and need count in weight write-in latency
                 total_latency_eachLayer[dest_layer_idx] += write_latency_weight_eachLayer[dest_layer_idx]
+    # print("layers_process_latency_eachDestLayer :",layers_process_latency_eachDestLayer)
     
     # get total_energy of eachLayer
     # consider if rram weight write-in is included in for each layer

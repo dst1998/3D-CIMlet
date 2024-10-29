@@ -3,7 +3,7 @@ import sys
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'Transformer_inf_3layer_12head_16token.csv'
+		self.model_filename = 'Transformer_adapter_cl_3layer_12head_16token.csv'
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
 		self.NetStructure = []
 		self.NetStructure_layer_def = []
@@ -15,7 +15,7 @@ class Config:
 		self.nop_clk_freq_2_5d_3d = 0.2E09 # 0.2GHz
 		# self.nop_bw_density_2_5d = 1.6E12 # CoWoS: 1.6 Tb/s/mm2
 		# self.nop_bw_density_3d = 9456E12 # 3D SoIC F2B (SoIC bond & TSV) 9456 Tb/s/mm2
-		self.Packaging_dimension = 2 # 2, 2.5, 3
+		self.Packaging_dimension = 2.5 # 2, 2.5, 3
 		self.pitch_size_2_5d = 40E-06 # CoWoS
 		self.pitch_size_3d = 9E-06 # 3D SoIC F2B (SoIC bond & TSV)
 
