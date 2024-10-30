@@ -177,7 +177,8 @@ def get_layer_energy_latency(row,config,technode,chiplet_type,memory_cell_type):
             refresh_retention_time = getattr(config, f'{memory_cell_type}_refresh_retention_time_{technode}nm')
             num_refresh_times_pe = floor(write_latency_input_pe + write_latency_weight_pe + read_latency_output_pe) / refresh_retention_time
             refresh_latency_weight_pe = write_latency_weight_pe * num_refresh_times_pe
-            refresh_energy_weight_pe = (num_bit_weight_write_pe * num_refresh_times_pe) * pe.subarray.write_energy_per_bit
+            refresh_power_per_bit = getattr(config, f'{memory_cell_type}_refresh_power_per_bit_{technode}nm')
+            refresh_energy_weight_pe = (num_bit_weight_write_pe * num_refresh_times_pe) * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
             
             # -----pe latency: take max., pe energy:add to total
             max_write_latency_input_pe = max(max_write_latency_input_pe,write_latency_input_pe)

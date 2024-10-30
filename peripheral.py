@@ -27,6 +27,8 @@ class ShiftAdd:
 			self.power = self.power_40nm * 6.5E-01
 		elif self.technode == 22:
 			self.power = self.power_40nm * 4.54E-01
+		elif self.technode == 16: # need second-order calibration
+			self.power = self.power_40nm * 3.00E-01
 		elif self.technode == 14:
 			self.power = self.power_40nm * 2.56E-01
 		elif self.technode == 10:
@@ -63,6 +65,8 @@ class Accumulator:
 			self.area = self.area_22nm / math.pow(22, 2) * math.pow(28, 2)
 		elif self.technode == 22:
 			self.area = self.area_22nm
+		elif self.technode == 16:
+			self.area = self.area_22nm / math.pow(22, 2) * math.pow(16, 2)
 		elif self.technode == 14:
 			self.area = self.area_22nm / math.pow(22, 2) * math.pow(14, 2)
 		elif self.technode == 10:
@@ -97,6 +101,8 @@ class SoftmaxUnit:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(28, 2)
 		elif self.technode == 22:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(22, 2)
+		elif self.technode == 16:
+			self.area = self.area_45nm / math.pow(45, 2) * math.pow(16, 2)
 		elif self.technode == 14:
 			self.area = self.area_45nm / math.pow(45, 2) * math.pow(14, 2)
 		elif self.technode == 10:
@@ -121,6 +127,8 @@ class SoftmaxUnit:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 6.5E-01
 		elif self.technode == 22:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 4.54E-01
+		elif self.technode == 16: # need second-order calibration
+			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 3.00E-01
 		elif self.technode == 14:
 			self.energy_per_byte = self.energy_per_byte_45nm /1.25 * 2.56E-01
 		elif self.technode == 10:
@@ -139,11 +147,12 @@ class Buffer: # sram / edram
 		self.power = 0
 		self.latency = 0
 		self.area = 0
-		self.bandwidth = 64*self.clk_freq # 3.18e12 # unit: scale from original constant:(ddr_bandwidth=370 GBps) * 1024 * 1024 * 1024 * 8bit
 		self.energy_per_bit = 0 # depends on clk_freq
 		self.memory_type = memory_type
 		self.mem_width = mem_width
 		self.mem_height = mem_height
+		self.leak_power_per_cell = 0
+		self.bandwidth = self.mem_width * self.clk_freq # 64*self.clk_freq # 3.18e12 # unit: scale from original constant:(ddr_bandwidth=370 GBps) * 1024 * 1024 * 1024 * 8bit
 	def get_area(self):
 		if self.memory_type == 'SRAM':
 			# # from Neurosim:
@@ -163,6 +172,12 @@ class Buffer: # sram / edram
 				cellSize = 8.20E-13
 			elif self.technode == 28:
 				cellSize = 3.60E-13
+			elif self.technode == 22:
+				cellSize = 200 * math.pow(self.technode*1e-9, 2) # from Neurosim
+			elif self.technode == 16:
+				cellSize = 300 * math.pow(self.technode*1e-9, 2) # from Neurosim
+			elif self.technode == 14:
+				cellSize = 300 * math.pow(self.technode*1e-9, 2) # from Neurosim
 			self.area = 1.3* self.mem_width * self.mem_height * cellSize
 		elif self.memory_type == 'eDRAM':
 			if self.technode == 130:
@@ -170,9 +185,15 @@ class Buffer: # sram / edram
 			elif self.technode == 65:
 				cellSize = 7.46E-13
 			elif self.technode == 40:
-				cellSize = 5.83E-14
+				cellSize = 4.30E-13
 			elif self.technode == 28:
 				cellSize = 2.86E-13
+			elif self.technode == 22:
+				cellSize = 9.00E-14
+			elif self.technode == 16:
+				cellSize = 8.00E-14
+			elif self.technode == 14:
+				cellSize = 5.60E-14
 			self.area = 1.3* self.mem_width * self.mem_height * cellSize
 		return self.area
 	def get_energy_per_bit(self,config):
@@ -202,6 +223,9 @@ class Buffer: # sram / edram
 			elif self.technode == 22:
 				read_energy_per_bit = 3.18E-14
 				write_energy_per_bit = 2.08E-14
+			elif self.technode == 16: # need second-order calibration
+				read_energy_per_bit = 2.10E-14
+				write_energy_per_bit = 1.45E-14
 			elif self.technode == 14:
 				read_energy_per_bit = 1.79E-14
 				write_energy_per_bit = 1.26E-14
@@ -224,42 +248,67 @@ class Buffer: # sram / edram
 			elif self.technode == 28:
 				read_energy_per_bit = config.eDRAM_read_energy_per_bit_28nm
 				write_energy_per_bit = config.eDRAM_write_energy_per_bit_28nm
+			elif self.technode == 22:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_22nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_22nm
+			elif self.technode == 16:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_16nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_16nm
+			elif self.technode == 14:
+				read_energy_per_bit = config.eDRAM_read_energy_per_bit_14nm
+				write_energy_per_bit = config.eDRAM_write_energy_per_bit_14nm
 		return read_energy_per_bit, write_energy_per_bit
 	def get_leak_power(self):
 		if self.memory_type == 'SRAM':
 			# from Neurosim:
 			if self.technode == 130:
-				leak_power_per_cell = 7.00E-11 # calibrated with a paper
+				self.leak_power_per_cell = 7.00E-11 # calibrated with a paper
 			elif self.technode == 90:
-				leak_power_per_cell = 2.05E-11
+				self.leak_power_per_cell = 2.05E-11
 			elif self.technode == 65:
-				leak_power_per_cell = 6.45E-12 # calibrated with a paper
+				self.leak_power_per_cell = 6.45E-12 # calibrated with a paper
 			elif self.technode == 45:
-				leak_power_per_cell = 8.54E-12
+				self.leak_power_per_cell = 8.54E-12
 			elif self.technode == 40:
-				leak_power_per_cell = 1.03E-12 # calibrated with a paper
+				self.leak_power_per_cell = 1.03E-12 # calibrated with a paper
 			elif self.technode == 32:
-				leak_power_per_cell = 5.46E-12
+				self.leak_power_per_cell = 5.46E-12
 			elif self.technode == 28:
-				leak_power_per_cell = 3.00E-13 # calibrated with a paper
+				self.leak_power_per_cell = 3.00E-13 # calibrated with a paper
 			elif self.technode == 22:
-				leak_power_per_cell = 3.55E-12
+				self.leak_power_per_cell = 3.55E-12
+			elif self.technode == 16:
+				self.leak_power_per_cell = 1.30E-12 # need second-order calibration
 			elif self.technode == 14:
-				leak_power_per_cell = 4.20E-12
+				self.leak_power_per_cell = 1.00E-12 # calibrated with a paper
 			elif self.technode == 10:
-				leak_power_per_cell = 3.56E-12
+				self.leak_power_per_cell = 3.56E-12
 			elif self.technode == 7:
-				leak_power_per_cell = 3.33E-12
+				self.leak_power_per_cell = 3.33E-12
 		elif self.memory_type == 'eDRAM':
+			# if self.technode == 130:
+			# 	self.leak_power_per_cell = 4.87E-08 # calibrated with a paper
+			# elif self.technode == 65:
+			# 	self.leak_power_per_cell = 1.13E-09 # calibrated with a paper
+			# elif self.technode == 40:
+			# 	self.leak_power_per_cell = 25E-15 # calibrated with a paper
+			# elif self.technode == 28:
+			# 	self.leak_power_per_cell = 2.2E-09 # calibrated with a paper
 			if self.technode == 130:
-				leak_power_per_cell = 4.87E-08 # calibrated with a paper
+				self.leak_power_per_cell = 3.85E-10
 			elif self.technode == 65:
-				leak_power_per_cell = 1.13E-09 # calibrated with a paper
+				self.leak_power_per_cell = 4.88E-10
 			elif self.technode == 40:
-				leak_power_per_cell = 25E-15 # calibrated with a paper
+				self.leak_power_per_cell = 3.78E-10
 			elif self.technode == 28:
-				leak_power_per_cell = 2.2E-09 # calibrated with a paper
-		leak_power = leak_power_per_cell * self.mem_width * self.mem_height
+				self.leak_power_per_cell = 2.20E-10
+			elif self.technode == 22:
+				self.leak_power_per_cell = 1.54E-10
+			elif self.technode == 16:
+				self.leak_power_per_cell = 1.05E-10
+			elif self.technode == 14:
+				self.leak_power_per_cell = 7.35E-11
+		leak_power = self.leak_power_per_cell * self.mem_width * self.mem_height
 		return leak_power
 class Noc:
 	def __init__(self,config,technode,chiplet_type):
@@ -411,6 +460,14 @@ class Htree:
 			self.capInvOutput = 7.14011e-16
 			self.wInv = 1.0032e-06
 			self.hInv = 6.16e-07
+		elif self.technode == 16:
+			# technode=16,featuresize=30e-9,wirewidth=30
+			self.minDist = 6.25839e-05
+			self.resOnRep = 63262.7
+			self.capInvInput = 4.81607e-15
+			self.capInvOutput = 5.27723e-16
+			self.wInv = 6.87e-07
+			self.hInv = 5.04e-07
 		elif self.technode == 14:
 			# technode=14,featuresize=25e-9,wirewidth=25
 			self.minDist = 4.21745e-05

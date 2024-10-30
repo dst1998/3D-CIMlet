@@ -1,6 +1,6 @@
 import math,sys
 
-technode = 28
+technode = 65
 R = 606.321 # float, [Ohm] ( D1=1um Inverter)
 MetalPitch_32nm = 0.000100
 
@@ -15,6 +15,7 @@ elif technode == 90:
 elif technode == 65:
     wireWidth = 105
     vdd = 1.1
+    MetalPitch = 180e-06
 elif technode == 45:
     wireWidth = 80
     vdd = 1.0
@@ -35,6 +36,10 @@ elif technode == 22:
     wireWidth = 40
     vdd = 0.85
     MetalPitch = 80e-06
+elif technode == 16:
+    wireWidth = 30
+    vdd = 0.8
+    MetalPitch = 64e-06
 elif technode == 14:
     wireWidth = 25
     vdd = 0.8

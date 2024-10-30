@@ -1,0 +1,26 @@
+// project from '2007 ITRS predictions for a 32nm high-performance library' in booksim
+H_INVD2  = 8;//int
+W_INVD2  = 3;//int
+H_DFQD1  = 8;//int
+W_DFQD1  = 16;//int
+H_ND2D1  = 8;//int
+W_ND2D1  = 3;//int
+H_SRAM  = 8;//int
+W_SRAM  = 6;//int
+Vdd  = 0.8;//float
+R  = 606.321;//float
+IoffSRAM  = 3.2e-07;//float
+// 70 C
+IoffP  = 1.02e-06;//float
+IoffN  = 1.02e-06;//float
+Cg_pwr  = 3.4175999999999996e-16;//float
+Cd_pwr  = 1.7087999999999998e-16;//float
+Cgdl  = 6.835199999999999e-17;//float
+Cg  = 3.4175999999999996e-16;//float
+Cd  = 1.7087999999999998e-16;//float
+LAMBDA  = 0.008;//float
+MetalPitch  = 6.4e-05;//float
+Rw  = 0.46082815999999993;//float
+Cw_gnd  = 1.7109695999999996e-13;//float
+Cw_cpl  = 1.7109695999999996e-13;//float
+wire_length  = 1.4142135623730951;//float

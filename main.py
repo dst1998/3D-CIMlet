@@ -81,6 +81,7 @@ def main(config):
             Num_StaticSubArray_eachLayer.append(num_used_subarray_this_layer)
             Num_DynamicSubArray_eachLayer.append(0)
 
+        # print("num_dynamic_chiplet_eachLayer:",num_dynamic_chiplet_eachLayer)
         num_used_dynamic_chiplet = max(num_dynamic_chiplet_eachLayer)
         num_chiplet_eachLayer = [a + b for a, b in zip(num_static_chiplet_eachLayer, num_dynamic_chiplet_eachLayer)]
 
@@ -326,7 +327,7 @@ def main(config):
             # semi_static layer, and need count in weight write-in latency
             if (NetStructure[dest_layer_idx][6] == 2) and (write_latency_weight_eachLayer[dest_layer_idx] > layers_process_latency_eachDestLayer[dest_layer_idx]): 
                 total_latency_eachLayer[dest_layer_idx] += write_latency_weight_eachLayer[dest_layer_idx]
-    # print("layers_process_latency_eachDestLayer :",layers_process_latency_eachDestLayer)
+    print("layers_process_latency_eachDestLayer :",layers_process_latency_eachDestLayer)
     
     # get total_energy of eachLayer
     # consider if rram weight write-in is included in for each layer
@@ -340,22 +341,73 @@ def main(config):
     
     # get refresh weight energy of each static layer (useful if in edram). and for each semi-static layer, weight refresh energy (stored in edram CIM) or weight leakage energy (stored in edram chip buffer) 
     refresh_retention_time = getattr(config, f'eDRAM_refresh_retention_time_{config.dynamic_chiplet_technode}nm')
+    refresh_power_per_bit = getattr(config, f'eDRAM_refresh_power_per_bit_{config.dynamic_chiplet_technode}nm')
     static_refresh_energy_weight_eachLayer = [0] * len(NetStructure)
     semi_static_refresh_energy_weight_eachLayer = [0] * len(NetStructure)
     buffer_leak_energy_weight_eachLayer = [0] * len(NetStructure)
     for layer_idx, layer in enumerate(NetStructure):
         if (layer[6] == 0) and (config.static_chiplet_memory_cell_type == 'eDRAM'): # static layer
             num_refresh_times = math.ceil(sum(total_latency_eachLayer) / refresh_retention_time)
-            static_refresh_energy_weight_eachLayer[layer_idx] = (layer[2]*layer[3]*config.BitWidth_weight * num_refresh_times) * static_chip_write_energy_per_bit
+            static_refresh_energy_weight_eachLayer[layer_idx] = (layer[2]*layer[3]*config.BitWidth_weight * num_refresh_times) * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
         elif layer[6] == 2: # semi-static layer
             # option 1: for each semi-static layer, weight refresh energy (stored in edram CIM)
             num_refresh_times = math.ceil(layers_process_latency_eachDestLayer[layer_idx] / refresh_retention_time)
-            semi_static_refresh_energy_weight_eachLayer[layer_idx] = (layer[2]*layer[3]*config.BitWidth_weight * num_refresh_times) * semi_static_chip_write_energy_per_bit
+            semi_static_refresh_energy_weight_eachLayer[layer_idx] = (layer[2]*layer[3]*config.BitWidth_weight * num_refresh_times) * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
             # option 2: for each semi-static layer, weight leakage energy (stored in edram chip buffer)
             buffer = Buffer(config,config.dynamic_chiplet_technode,'SRAM',mem_width=config.chip_buffer_core_width * math.ceil(layer[2]*layer[3]*config.BitWidth_weight / config.chip_buffer_core_height / config.chip_buffer_core_width) ,mem_height=config.chip_buffer_core_height)
             buffer_leak_energy_weight_eachLayer[layer_idx] = layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power()
             # buffer_leak_energy_weight_eachLayer[layer_idx] = total_latency * buffer.get_leak_power()
     
+    bp_weight_storage_energy_eachLayer = [0] * len((NetStructure))
+    extra_bp_weight_storage_energy_eachLayer = [0] * len((NetStructure))
+    # option 3: hybrid edram-sram buffer
+    if any(keyword in config.model_filename for keyword in ("cl", "ft")):
+        available_sram_buffer_size_each_static2_chip = [Integration.static2_chiplet.buffer_size] * num_used_semi_static_chiplet
+        buffer = Integration.static2_chiplet.buffer
+        print("Integration.static2_chiplet.buffer_size=",Integration.static2_chiplet.buffer_size)
+        print("buffer_height=",buffer.mem_height)
+        print("buffer_width=",buffer.mem_width)
+        
+        for layer_idx, layer in enumerate(NetStructure):
+            if layer[6] == 2:
+                for chip_idx, chip_layers_group in enumerate(static_chiplet_layers):
+                    if layer_idx in chip_layers_group:
+                        num_this_layer_input_bit = Num_In_eachLayer[layer_idx] * config.BitWidth_in
+                        # if sram buffer is available for all input bits of this layer, store all in sram buffer
+                        chip_idx -= num_used_static_chiplet
+                        if available_sram_buffer_size_each_static2_chip[chip_idx] >= num_this_layer_input_bit :
+                            extra_bp_weight_storage_energy_eachLayer[layer_idx] += layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power() / (buffer.mem_width * buffer.mem_height) * num_this_layer_input_bit
+
+                            bp_weight_storage_energy_eachLayer[layer_idx] += layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power() / (buffer.mem_width * buffer.mem_height) * num_this_layer_input_bit + (buffer.get_energy_per_bit(config)[0] + buffer.get_energy_per_bit(config)[1]) * num_this_layer_input_bit
+
+                            available_sram_buffer_size_each_static2_chip[chip_idx] -= num_this_layer_input_bit # update buffer availability
+                        # else: sram buffer has no enough availablability for this layer
+                        else:
+                            # sram has 0 availablity, store and refresh all in eDRAM CIM
+                            if available_sram_buffer_size_each_static2_chip[chip_idx] == 0:
+                                num_refresh_times = math.ceil(layers_process_latency_eachDestLayer[layer_idx] / refresh_retention_time)
+                                extra_bp_weight_storage_energy_eachLayer[layer_idx] += num_this_layer_input_bit * num_refresh_times * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
+                                extra_bp_weight_storage_energy_eachLayer[layer_idx] -= (buffer.get_energy_per_bit(config)[0] + buffer.get_energy_per_bit(config)[1])* num_this_layer_input_bit
+
+                                bp_weight_storage_energy_eachLayer[layer_idx] += num_this_layer_input_bit * num_refresh_times * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
+
+                            # sram has some availablity, store and refresh a part of this layer in eDRAM CIM, store others in eDRAM CIM 
+                            elif available_sram_buffer_size_each_static2_chip[chip_idx] < num_this_layer_input_bit :
+                                # store a part in SRAM
+                                extra_bp_weight_storage_energy_eachLayer[layer_idx] += layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power() / (buffer.mem_width * buffer.mem_height) * available_sram_buffer_size_each_static2_chip[chip_idx]
+
+                                bp_weight_storage_energy_eachLayer[layer_idx] += layers_process_latency_eachDestLayer[layer_idx] * buffer.get_leak_power() / (buffer.mem_width * buffer.mem_height) * available_sram_buffer_size_each_static2_chip[chip_idx] + (buffer.get_energy_per_bit(config)[0] + buffer.get_energy_per_bit(config)[1]) * num_this_layer_input_bit
+
+                                # store a part in eDRAM CIM
+                                num_refresh_times = math.ceil(layers_process_latency_eachDestLayer[layer_idx] / refresh_retention_time)
+                                extra_bp_weight_storage_energy_eachLayer[layer_idx] += (num_this_layer_input_bit - available_sram_buffer_size_each_static2_chip[chip_idx]) * num_refresh_times * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
+                                extra_bp_weight_storage_energy_eachLayer[layer_idx] -= (buffer.get_energy_per_bit(config)[0] + buffer.get_energy_per_bit(config)[1])* (num_this_layer_input_bit - available_sram_buffer_size_each_static2_chip[chip_idx])
+
+                                bp_weight_storage_energy_eachLayer[layer_idx] += (num_this_layer_input_bit - available_sram_buffer_size_each_static2_chip[chip_idx]) * num_refresh_times * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
+
+                                # update sram buffer availability
+                                available_sram_buffer_size_each_static2_chip[chip_idx] = 0 
+        print("extra_bp_weight_storage_energy_eachLayer:",extra_bp_weight_storage_energy_eachLayer)                        
     total_write_latency_input = sum(write_latency_input_eachLayer)
     total_write_energy_input = sum(write_energy_input_eachLayer)
     total_write_latency_weight = sum(write_latency_weight_eachLayer)
@@ -375,19 +427,26 @@ def main(config):
     total_latency = sum(total_latency_eachLayer)
     total_energy = sum(total_energy_eachLayer)
     total_static_refresh_energy_weight = sum(static_refresh_energy_weight_eachLayer)
-    total_semi_static_refresh_energy_weight = sum(semi_static_refresh_energy_weight_eachLayer)
+    # option 1:
+    total_semi_static_refresh_energy_weight = sum(semi_static_refresh_energy_weight_eachLayer) 
+    # option 2:
     total_buffer_leak_energy_weight = sum(buffer_leak_energy_weight_eachLayer)
+    # option 3:
+    total_extra_bp_weight_storage_energy = sum(extra_bp_weight_storage_energy_eachLayer)
+    total_bp_weight_storage_energy = sum(bp_weight_storage_energy_eachLayer)
     
     Total_Energy = 0
     Total_Energy += total_energy + total_static_refresh_energy_weight
     Total_Energy_opt_1 = Total_Energy + total_semi_static_refresh_energy_weight
     Total_Energy_opt_2 = Total_Energy + total_buffer_leak_energy_weight
+    Total_Energy_opt_3 = Total_Energy + total_extra_bp_weight_storage_energy
 
     # w/ NoC,NoP
     Total_Energy += noc_energy + noc_train_energy + nop_energy + nop_train_energy
     Total_Energy += nop_driver_energy
     Total_Energy_opt_1_ = Total_Energy + total_semi_static_refresh_energy_weight
     Total_Energy_opt_2_ = Total_Energy + total_buffer_leak_energy_weight
+    Total_Energy_opt_3_ = Total_Energy + total_extra_bp_weight_storage_energy
 
     Total_Latency = 0
     Total_Latency += total_latency
@@ -401,6 +460,9 @@ def main(config):
 
     Energy_Efficiency_opt_2 = Total_top_num / Total_Energy_opt_2
     Energy_Efficiency_Per_Area_opt_2 = Energy_Efficiency_opt_2 / Total_Area_mm2
+    
+    Energy_Efficiency_opt_3 = Total_top_num / Total_Energy_opt_3
+    Energy_Efficiency_Per_Area_opt_3 = Energy_Efficiency_opt_3 / Total_Area_mm2
 
     # w/ NoC,NoP
     Energy_Efficiency_opt_1_ = Total_top_num / Total_Energy_opt_1_
@@ -408,6 +470,9 @@ def main(config):
 
     Energy_Efficiency_opt_2_ = Total_top_num / Total_Energy_opt_2_
     Energy_Efficiency_Per_Area_opt_2_ = Energy_Efficiency_opt_2_ / Total_Area_mm2
+    
+    Energy_Efficiency_opt_3_ = Total_top_num / Total_Energy_opt_3_
+    Energy_Efficiency_Per_Area_opt_3_ = Energy_Efficiency_opt_3_ / Total_Area_mm2
 
     print("==========================================")
     print("Integration_dimension:",config.Packaging_dimension)
@@ -450,36 +515,52 @@ def main(config):
     print("Energy Efficiency (TOPS/W) :", Energy_Efficiency_opt_2_)
     print("Energy Efficiency Per Area (TOPS/W/mm2) :", Energy_Efficiency_Per_Area_opt_2_)
     print("")
+    
+    print("===== option3: SRAM leak + eDRAM CIM refresh =====")
+    print("")
+    print("-- w/o NoC,NoP:")
+    print("Total Energy (J) :",Total_Energy_opt_3)
+    print("Total Leak Energy (J) -- bp_weight_store_energy (store bp changing weight in SRAM buffer and eDRAM CIM) :",total_bp_weight_storage_energy)
+    print("Energy Efficiency (TOPS/W) :", Energy_Efficiency_opt_3)
+    print("Energy Efficiency Per Area (TOPS/W/mm2) :", Energy_Efficiency_Per_Area_opt_3)
+    print("")
+    print("-- w/ NoC,NoP:")
+    print("Total Energy (J) :",Total_Energy_opt_3_)
+    print("Total Leak Energy (J) -- bp_weight_store_energy (store bp changing weight in SRAM buffer and eDRAM CIM) :",total_bp_weight_storage_energy)
+    print("Energy Efficiency (TOPS/W) :", Energy_Efficiency_opt_3_)
+    print("Energy Efficiency Per Area (TOPS/W/mm2) :", Energy_Efficiency_Per_Area_opt_3_)
+    print("")
 
     print("===== Breakdown =====")
     print("Num used Static Chiplets (static and semi-static):", num_used_static_chiplet_all_layers)
     print("Num used Dynamic Chiplets:", num_used_dynamic_chiplet)
     
     print("static chiplet utilization:", static_chiplet_utilization) # for each static-chiplet, ?% pe used 
-    print("dynamic chiplet utilization:", dynamic_chiplet_utilization) # for each dynamic-layer, ?% pe used  in all dynamic chiplets
+    formatted_dynamic_utilization = [f"{util:.4f}" for util in dynamic_chiplet_utilization]
+    # print("dynamic chiplet utilization each layer:", formatted_dynamic_utilization)
     print("")
 
-    print("total_write_latency_input:",total_write_latency_input)
-    print("total_write_latency_weight:",total_write_latency_weight)
-    print("total_read_latency_output:",total_read_latency_output)
-    print("total_refresh_latency_weight:",total_refresh_latency_weight)
-    print("")
+    # print("total_write_latency_input:",total_write_latency_input)
+    # print("total_write_latency_weight:",total_write_latency_weight)
+    # print("total_read_latency_output:",total_read_latency_output)
+    # print("total_refresh_latency_weight:",total_refresh_latency_weight)
+    # print("")
     
-    print("total_write_energy_input:",total_write_energy_input)
-    print("total_write_energy_weight:",total_write_energy_weight)
-    print("total_read_energy_output:",total_read_energy_output)
-    print("total_refresh_energy_weight:",total_refresh_energy_weight)
-    print("")
-    # -----htree breakdown
-    print("total_write_latency_input_peHtree:",total_write_latency_input_peHtree)
-    print("total_write_latency_weight_peHtree:",total_write_latency_weight_peHtree)
-    print("total_read_latency_output_peHtree:",total_read_latency_output_peHtree)
+    # print("total_write_energy_input:",total_write_energy_input)
+    # print("total_write_energy_weight:",total_write_energy_weight)
+    # print("total_read_energy_output:",total_read_energy_output)
+    # print("total_refresh_energy_weight:",total_refresh_energy_weight)
+    # print("")
+    # # -----htree breakdown
+    # print("total_write_latency_input_peHtree:",total_write_latency_input_peHtree)
+    # print("total_write_latency_weight_peHtree:",total_write_latency_weight_peHtree)
+    # print("total_read_latency_output_peHtree:",total_read_latency_output_peHtree)
 
-    print("total_write_energy_input_peHtree:",total_write_energy_input_peHtree)
-    print("total_write_energy_weight_peHtree:",total_write_energy_weight_peHtree)
-    print("total_read_energy_output_peHtree:",total_read_energy_output_peHtree)
-    
-    print("")
+    # print("total_write_energy_input_peHtree:",total_write_energy_input_peHtree)
+    # print("total_write_energy_weight_peHtree:",total_write_energy_weight_peHtree)
+    # print("total_read_energy_output_peHtree:",total_read_energy_output_peHtree)
+    # print("")
+
     print(f"NOC Area: {noc_area}, NOC Latency: {noc_latency}, NOC Energy: {noc_energy}")
     print(f"NOC Area (for train): {noc_train_area}, NOC Latency (for train): {noc_train_latency}, NOC Energy (for train): {noc_train_energy}")
     print(f"NOP Area: {nop_area}, NOP Latency: {nop_latency}, NOP Energy: {nop_energy}")

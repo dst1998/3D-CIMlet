@@ -1,17 +1,17 @@
 import pandas as pd
 import math
 
-model_layer = 12
-head = 12
-token_len = 128
-dim = 768
+model_layer = 4
+head = 4
+token_len = 16
+dim = 512
 dim_ff = dim*4
 dim_head = math.ceil(dim/head)
 dim_ada = 32
 dim_out = 2 # final classification
 num_onelayer_row = 3+ head*2 +3 +4
 num_file_row = num_onelayer_row * model_layer +1 # +1: final output weight after all layers
-model_type = 'BERT_base_adapter_inf'
+model_type = 'BERT_small_adapter_inf'
 # Define the first line of customization
 first_row = ['model_type', model_type] + [0] * 7
 

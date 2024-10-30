@@ -165,7 +165,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
                         last_chiplet_used = chiplet_index
 
                     else:
-                        print(f"Layer {layer_idx}: Not enough space in chiplet {chiplet_index}, moving to the next chiplet.")
+                        # print(f"Layer {layer_idx}: Not enough space in chiplet {chiplet_index}, moving to the next chiplet.")
                         last_chiplet_used += 1
                         num_used_chiplet += 1
             
@@ -372,7 +372,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
         
         print("dest_layers:",dest_layers)
     
-    elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_cl", "BERT_base_adapter_cl")):
+    elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_cl", "BERT_base_adapter_cl","BERT_small_adapter_cl")):
         
         match = re.search(r'_(\d+)layer', config.model_filename)
         if match:
