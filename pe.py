@@ -22,8 +22,8 @@ class Pe:
             self.pe_width = config.static_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
         elif chiplet_type == 'static_2':
-            self.pe_height = config.static_pe_height # num of subarray rows in a pe
-            self.pe_width = config.static_pe_width # num of subarray cols in a pe
+            self.pe_height = config.static2_pe_height # num of subarray rows in a pe
+            self.pe_width = config.static2_pe_width # num of subarray cols in a pe
             self.sfu = SoftmaxUnit(config,technode,memory_cell_type)
         elif chiplet_type == 'dynamic':
             self.pe_height = config.dynamic_pe_height # num of subarray rows in a pe
@@ -37,5 +37,5 @@ class Pe:
     def get_area(self):
         subarrays_area = self.subarray.get_area() * self.pe_height * self.pe_width
         area = subarrays_area + self.buffer.get_area() + self.accumulator.get_area() + self.htree.get_area() + self.sfu.get_area()
-        # print("pe area: ",area)
+        # print("subarray_area: ", "{:.5e}".format(self.subarray.get_area()))
         return area

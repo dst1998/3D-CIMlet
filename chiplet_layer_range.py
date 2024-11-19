@@ -98,7 +98,7 @@ def get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chip
     
     return chiplet_layer_range, chiplet_availability, num_used_chiplet,layer_location_begin_chiplet
 
-def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer):
+def get_static_chiplet_layers(config,net_structure,net_structure_layer_def,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer):
     static_chiplet_size = config.static_chiplet_height * config.static_chiplet_width
 
     # get layers in each static chiplet (chiplet_layer_range list :layer?~? in chiplet i)
@@ -110,7 +110,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
     chiplet_index = 0
     num_used_chiplet = 0
     
-    # go through static layers
+    # go through static layers (weights - pretrained but not learned)
     for layer_idx, layer in enumerate(net_structure):
         # print("layer:", layer)
             
@@ -122,7 +122,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
         # Calculate how many chiplets are needed for this layer
         num_static_chiplet_this_layer = num_static_chiplet_eachLayer[layer_idx]
         
-        if layer[6] == 0: # is static layer
+        if (layer[6] == 0) and (net_structure_layer_def[layer_idx] not in('adapter 1-1,','adapter 1-2,','adapter 2-1,','adapter 2-2,','output weight projection,', 'FP:adapter 1-1,','FP:adapter 1-2,','FP:adapter 2-1,','FP:adapter 2-2,','FP:output weight projection,')): # is static layer
             # Split the PE requirements for this layer equally across multiple chiplets
             if num_static_chiplet_this_layer >1:
                 pe_used_per_chiplet = math.ceil(required_pes / num_static_chiplet_this_layer)
@@ -176,8 +176,79 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
                 num_used_chiplet = (last_chiplet_used + 1)
     # print("num_used_static_chiplet:", num_used_chiplet)
 
-    for chiplet_index in range(num_used_chiplet,config.num_static_chiplet):
-        chiplet_availability[chiplet_index] = config.static_chiplet_height * config.static_chiplet_width
+    # for chiplet_index in range(num_used_chiplet,config.num_static_chiplet):
+    #     chiplet_availability[chiplet_index] = config.static_chiplet_height * config.static_chiplet_width
+    
+    # go through static layers (weights - learned)
+    for layer_idx, layer in enumerate(net_structure):
+        # print("layer:", layer)
+            
+        required_pes = Num_StaticPE_eachLayer[layer_idx]
+        # print("required_pes:", required_pes)
+        if required_pes == 0:  # is dynamic layer，skip this layer
+            continue
+        
+        # Calculate how many chiplets are needed for this layer
+        num_static_chiplet_this_layer = num_static_chiplet_eachLayer[layer_idx]
+        
+        if layer[6] == 0 and (net_structure_layer_def[layer_idx] in('adapter 1-1,','adapter 1-2,','adapter 2-1,','adapter 2-2,','output weight projection,', 'FP:adapter 1-1,','FP:adapter 1-2,','FP:adapter 2-1,','FP:adapter 2-2,','FP:output weight projection,')): # is static layer
+            # Split the PE requirements for this layer equally across multiple chiplets
+            # print("test_layer_idx:",layer_idx)
+            if num_static_chiplet_this_layer >1:
+                pe_used_per_chiplet = math.ceil(required_pes / num_static_chiplet_this_layer)
+                if last_chiplet_used != 0:
+                    chiplet_index = last_chiplet_used + 1 # the layer need more than 1 chiplet, then start with a new chiplet
+                for i in range(num_static_chiplet_this_layer):
+                    chiplet_availability[chiplet_index + i] -= pe_used_per_chiplet
+
+                    # update chiplet_layers of this chiplet
+                    chiplet_layers[chiplet_index + i].append(layer_idx)
+                
+                layer_location_begin_chiplet[layer_idx] = chiplet_index # tell this layer is on which chiplet
+                
+                last_chiplet_used = chiplet_index + num_static_chiplet_this_layer-1 # update next chiplet index
+                
+                num_used_chiplet = last_chiplet_used + 1
+
+            else: # num_static_chiplet_this_layer == 1
+                while required_pes > 0 and num_used_chiplet + num_static_chiplet_this_layer <= config.num_static_chiplet:
+                    if (layer_idx != 0) and (num_static_chiplet_eachLayer[layer_idx-1]>1):
+                        chiplet_index = last_chiplet_used + 1
+                    # if this chip has mapped static layers (pretrained weights), this static layer (learned weights) mapped to a new chip
+                    elif any((net_structure[layer_index][6] == 0 and net_structure_layer_def[layer_index] not in ('adapter 1-1,', 'adapter 1-2,', 'adapter 2-1,', 'adapter 2-2,', 'output weight projection,')) for layer_index in chiplet_layers[last_chiplet_used]):
+                        chiplet_index = last_chiplet_used + 1 ######
+                    else:
+                        chiplet_index = last_chiplet_used
+                    available_pe = chiplet_availability[chiplet_index]
+                    # print("chiplet_index:", chiplet_index)
+                    # print("required_pes:", required_pes)
+                    # print("available_pe:", available_pe)
+                    
+                    if required_pes <= available_pe:
+                        chiplet_availability[chiplet_index] -= required_pes
+                        required_pes -= required_pes
+                        
+                        # update chiplet_layers of this chiplet
+                        chiplet_layers[chiplet_index].append(layer_idx)
+                        
+                        # tell this layer is on which chiplet
+                        layer_location_begin_chiplet[layer_idx] = chiplet_index
+                        
+                        # update last_chiplet_used
+                        last_chiplet_used = chiplet_index
+
+                    else:
+                        # print(f"Layer {layer_idx}: Not enough space in chiplet {chiplet_index}, moving to the next chiplet.")
+                        last_chiplet_used += 1
+                        num_used_chiplet += 1
+            
+            if (last_chiplet_used + 1) > config.num_static_chiplet:
+                print(f"Layer {layer_idx} requires more chiplets than available.")
+                break
+            if num_used_chiplet != (last_chiplet_used + 1):
+                num_used_chiplet = (last_chiplet_used + 1)
+    
+    chiplet_availability[num_used_chiplet:] = [config.static2_chiplet_height * config.static2_chiplet_width] * (len(chiplet_availability) - num_used_chiplet) # update chip size for static 2 chip
     
     # go through semi-static layers
     for layer_idx, layer in enumerate(net_structure):
@@ -192,6 +263,9 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
         num_static_chiplet_this_layer = num_static_chiplet_eachLayer[layer_idx]
         
         if layer[6] == 2: # is semi-static layer
+
+            chiplet_availability[num_used_chiplet:] = [config.static2_chiplet_height * config.static2_chiplet_width] * (len(chiplet_availability) - num_used_chiplet) # update chip size for static 2 chip
+
             # Split the PE requirements for this layer equally across multiple chiplets
             if num_static_chiplet_this_layer >1:
                 pe_used_per_chiplet = math.ceil(required_pes / num_static_chiplet_this_layer)
@@ -202,6 +276,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
                 #     chiplet_availability[chiplet_index + i] -= pe_used_per_chiplet
                 for i in range(num_static_chiplet_this_layer):
                     if chiplet_index + i < len(chiplet_availability):
+                        chiplet_availability[chiplet_index + i] = config.static2_chiplet_height * config.static2_chiplet_width # update chip size for static 2 chip
                         chiplet_availability[chiplet_index + i] -= pe_used_per_chiplet
                     else:
                         print(f"Warning: Layer {layer_idx} need {num_static_chiplet_this_layer} chip, i= {i}, chiplet_index {chiplet_index + i} out of range.")
@@ -218,20 +293,29 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
             else: # num_static_chiplet_this_layer == 1
                 while required_pes > 0 and num_used_chiplet + num_static_chiplet_this_layer <= config.num_static_chiplet:
                     # if last layer use more than 1 chip, this layer mapped to a new chip 
-                    if (layer_idx != 0) and (num_static_chiplet_eachLayer[layer_idx-1]>1):
+                    if (layer_idx != 0) and (net_structure[layer_idx-1][6]==2) and (num_static_chiplet_eachLayer[layer_idx-1]>1):
                         chiplet_index = last_chiplet_used + 1
+                        # if layer_idx == 453:
+                        #     print("!! 1 update chip idx to:",chiplet_index)
+                        #     print("layer_idx-1:",layer_idx-1)
+                        #     print("num_static_chiplet_layer_idx-1:",num_static_chiplet_eachLayer[layer_idx-1])
                     # if this chip has mapped static layers, this semi-static layer mapped to a new chip
                     elif any(net_structure[layer_index][6] == 0 for layer_index in chiplet_layers[last_chiplet_used]):
-                        chiplet_index = last_chiplet_used + 1
+                        chiplet_index = last_chiplet_used + 1 ######
+                        if layer_idx == 453:
+                            print("!! 2 update chip idx to:",chiplet_index)
                     else:
                         chiplet_index = last_chiplet_used
+                    
+                    chiplet_availability[chiplet_index] = config.static2_chiplet_height * config.static2_chiplet_width # update chip size for static 2 chip
                     available_pe = chiplet_availability[chiplet_index]
                     # print("chiplet_index:", chiplet_index)
-                    # print("required_pes:", required_pes)
-                    # print("available_pe:", available_pe)
-                    
+                    # print("layer_idx:", layer_idx)
+                    # print("required_pes:", required_pes)          
                     if required_pes <= available_pe:
                         chiplet_availability[chiplet_index] -= required_pes
+                        available_pe -= required_pes
+                        # print("available_pe:", available_pe)
                         required_pes -= required_pes
                         
                         # update chiplet_layers of this chiplet
@@ -259,7 +343,7 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
     chiplet_layers = chiplet_layers[0:num_used_chiplet]
     print("chiplet_layers:", chiplet_layers)
     
-    # mark the static chip type to semi-static or not: static:0, semi-static:2.
+    # mark the static chip type to semi-static or not: static:0, semi-static:2. 
     chiplet_static_type = [0] * len(chiplet_layers)
     for chiplet_idx in range(len(chiplet_layers)):
         for layer_idx in chiplet_layers[chiplet_idx]:
@@ -274,8 +358,20 @@ def get_static_chiplet_layers(config,net_structure,Num_StaticPE_eachLayer,num_st
             num_used_static_chiplet += 1
         elif chiplet_type == 2:
             num_used_semi_static_chiplet += 1
-    print("num_used_static_chiplet:", num_used_static_chiplet)
-    print("num_used_semi_static_chiplet:", num_used_semi_static_chiplet)
+    print("num_used_static_chiplet :", num_used_static_chiplet)
+    print("num_used_semi_static_chiplet :", num_used_semi_static_chiplet)
+    
+    # Only for adapter-inf, mark the static chip (with learned weight) to 1 in static_chip_learned_list
+    num_used_static_chip_learned = 0
+    static_chip_learned_list = [0] * num_used_static_chiplet
+    for chiplet_idx in range(len(chiplet_layers)):
+        for layer_idx in chiplet_layers[chiplet_idx]:
+            if net_structure[layer_idx][6] == 0 and (net_structure_layer_def[layer_idx] in ('adapter 1-1,','adapter 1-2,','adapter 2-1,','adapter 2-2,','output weight projection,')):
+                # print("layer:",layer_idx)
+                static_chip_learned_list[chiplet_idx] = 1
+    print("static_chip_learned_list:",static_chip_learned_list)
+    num_used_static_chip_learned = sum(static_chip_learned_list)
+    print("num_used_static_chip_learned :",num_used_static_chip_learned)
 
     # update each dynamic layer's beginning chiplet from -1 to the first dynamic chiplet.
     for i in range(len(layer_location_begin_chiplet)):
@@ -329,7 +425,153 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
             if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
                 dest_layers[layer].append(0)
         
-        print("dest_layers:",dest_layers)
+        # print("dest_layers:",dest_layers)
+    
+    # if any(keyword in config.model_filename for keyword in ("Gpt2_inf")):
+    if config.model_filename.startswith("Gpt2_inf"):
+        num_layers_per_T_layer = 3+ num_T_head*2 +2 # no head contact layer
+        dest_layers = [[] for _ in range(len(net_structure))]
+        to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        num_to_bp_transfer_byte_to_layer = [0 for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        for layer in range(len(net_structure)):
+            # generate K,Q
+            if ((layer % num_layers_per_T_layer == 0)and(layer != len(net_structure)-1)) or (layer % num_layers_per_T_layer == 1):
+                # print("case1:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    # print("head:",head)
+                    # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+                    dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+            # generate V
+            if (layer % num_layers_per_T_layer == 2):
+                # print("case2:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    dest_layers[layer].append(2+head*2 + layer)      
+            # K.QT        
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==0):
+                # print("case3:")
+                # print("layer:",layer)
+                dest_layers[layer].append(1 + layer)
+            # K.QT * V
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==1):
+                # print("case4:")
+                # print("layer:",layer)
+                dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-2)
+            # ff1
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-2):
+                # print("case5:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # ff2, then to next Transformer layer or final output classification
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-1):
+                # print("case6:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # final output classification weight, also last layer of whole model, go to the first layer
+            if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
+                # print("case7:")
+                # print("layer:",layer)
+                dest_layers[layer].append(0)
+        
+        # print("dest_layers:",dest_layers)
+    
+    # if any(keyword in config.model_filename for keyword in ("Gpt2_inf")):
+    if config.model_filename.startswith("Gpt2_inf_new"):
+        num_layers_per_T_layer = 3+ num_T_head*2 +3 # w/ head contact layer
+        dest_layers = [[] for _ in range(len(net_structure))]
+        to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        num_to_bp_transfer_byte_to_layer = [0 for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        for layer in range(len(net_structure)):
+            # generate K,Q
+            if ((layer % num_layers_per_T_layer == 0)and(layer != len(net_structure)-1)) or (layer % num_layers_per_T_layer == 1):
+                # print("case1:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    # print("head:",head)
+                    # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+                    dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+            # generate V
+            if (layer % num_layers_per_T_layer == 2):
+                # print("case2:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    dest_layers[layer].append(2+head*2 + layer)      
+            # K.QT        
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==0):
+                # print("case3:")
+                # print("layer:",layer)
+                dest_layers[layer].append(1 + layer)
+            # K.QT * V
+            if (0 <= ((layer % num_layers_per_T_layer)-3)/2 <num_T_head) and ( ((layer % num_layers_per_T_layer)-3)%2 ==1):
+                # print("case4:")
+                # print("layer:",layer)
+                dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-2)
+            # ff1
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-2):
+                # print("case5:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # ff2, then to next Transformer layer or final output classification
+            if (layer % num_layers_per_T_layer == num_layers_per_T_layer-1):
+                # print("case6:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # final output classification weight, also last layer of whole model, go to the first layer
+            if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
+                # print("case7:")
+                # print("layer:",layer)
+                dest_layers[layer].append(0)
+        
+        # print("dest_layers:",dest_layers)    
+    
+    # if any(keyword in config.model_filename for keyword in ("DeiT_inf")):
+    if config.model_filename.startswith("DeiT_inf"):
+        num_layers_per_T_layer = 3+ num_T_head*2 +3
+        dest_layers = [[] for _ in range(len(net_structure))]
+        to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        num_to_bp_transfer_byte_to_layer = [0 for _ in range(len(net_structure))] # only init, not used in adapter_inf
+        for layer in range(len(net_structure)):
+            #generate token
+            if (layer == 0):
+                dest_layers[layer].append(layer+1)
+            # generate K,Q
+            if (((layer-1) % num_layers_per_T_layer == 0)and(layer != len(net_structure)-1)) or ((layer-1) % num_layers_per_T_layer == 1):
+                # print("case1:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    # print("head:",head)
+                    # print("dest:",3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+                    dest_layers[layer].append(3+head*2 + math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer)
+            # generate V
+            if ((layer-1) % num_layers_per_T_layer == 2):
+                # print("case2:")
+                # print("layer:",layer)
+                for head in range(num_T_head):
+                    dest_layers[layer].append(2+head*2 + layer)      
+            # K.QT        
+            if (0 <= (((layer-1) % num_layers_per_T_layer)-3)/2 <num_T_head) and ( (((layer-1) % num_layers_per_T_layer)-3)%2 ==0):
+                # print("case3:")
+                # print("layer:",layer)
+                dest_layers[layer].append(1 + layer)
+            # K.QT * V
+            if (0 <= (((layer-1) % num_layers_per_T_layer)-3)/2 <num_T_head) and ( (((layer-1) % num_layers_per_T_layer)-3)%2 ==1):
+                # print("case4:")
+                # print("layer:",layer)
+                dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-3)
+            # head contact, ff1
+            if ((layer-1) % num_layers_per_T_layer == num_layers_per_T_layer-3) or ((layer-1) % num_layers_per_T_layer == num_layers_per_T_layer-2):
+                # print("case5:")
+                # print("layer:",layer)
+                dest_layers[layer].append(layer+1)
+            # ff2, then to next Transformer layer or final output classification
+            if ((layer-1) % num_layers_per_T_layer == num_layers_per_T_layer-1):
+                dest_layers[layer].append(layer+1)
+            # final output classification weight, also last layer of whole model, go to the first layer
+            if ((layer-1) % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
+                dest_layers[layer].append(0)
+        
+        # print("dest_layers:",dest_layers)
     
     elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_inf", "BERT_base_adapter_inf")):
         num_layers_per_T_layer = 3+ num_T_head*2 +3 +4
@@ -370,7 +612,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
             if (layer % num_layers_per_T_layer == 0) and (layer == len(net_structure)-1):
                 dest_layers[layer].append(0)
         
-        print("dest_layers:",dest_layers)
+        # print("dest_layers:",dest_layers)
     
     elif any(keyword in config.model_filename for keyword in ("Transformer_adapter_cl", "BERT_base_adapter_cl","BERT_small_adapter_cl")):
         
@@ -627,8 +869,8 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     dest_layers[layer].append(layer+1) # to: BP:weight_adapter2-2
                     dest_layers[layer].append(layer+2) # to: W Gradient:weight_adapter2-2
 
-        print("dest_layers:",dest_layers)
-        print("to_bp_dest_layers:",to_bp_dest_layers)
+        # print("dest_layers:",dest_layers)
+        # print("to_bp_dest_layers:",to_bp_dest_layers)
     
     elif any(keyword in config.model_filename for keyword in ("Transformer_ft", "BERT_base_ft")):
         match = re.search(r'_(\d+)layer', config.model_filename)
@@ -651,7 +893,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                         # to FP
                         output_dest_layer = 3+head*2 + math.floor(layer/fp_num_layers_per_T_layer)*fp_num_layers_per_T_layer
                         dest_layers[layer].append(output_dest_layer)
-                        # to BP
+                        # to BP 
                         bp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:K,']
                         bp_dest_layer = bp_indexes[(T_layer -1 - math.floor(layer / fp_num_layers_per_T_layer))*num_T_head +head]
 
@@ -723,12 +965,15 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     out_dest_layer = min(index for index in indexes if index > layer)
                     dest_layers[layer].append(out_dest_layer) # to: FP:head contact
                     # to BP
-                    for head in range(num_T_head):
-                        bp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:A,']
-                        bp_dest_layer = bp_indexes[(T_layer -1 - math.floor(layer / fp_num_layers_per_T_layer))*num_T_head +head]
+                    # for head in range(num_T_head):
+                    fp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:KQT softmax * V,']
+                    pos_fp = fp_indexes.index(layer)
+                    
+                    bp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:A,']
+                    bp_dest_layer = bp_indexes[(T_layer -1 - math.floor(layer / fp_num_layers_per_T_layer))*num_T_head + (T_layer -1 - pos_fp %  num_T_head)]
 
-                        to_bp_dest_layers[layer].append(bp_dest_layer) 
-                        num_to_bp_transfer_byte_to_layer[bp_dest_layer] = net_structure[bp_dest_layer][2] * net_structure[bp_dest_layer][3]
+                    to_bp_dest_layers[layer].append(bp_dest_layer) 
+                    num_to_bp_transfer_byte_to_layer[bp_dest_layer] = net_structure[bp_dest_layer][2] * net_structure[bp_dest_layer][3]
                 
                 # FP: head contact
                 elif netStructure_layer_def[layer] == 'FP:head contact,':
@@ -952,8 +1197,55 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     out_dest_layer = fp_indexes[(T_layer -1 - (indexes.index(layer)))*3 +0]
                     dest_layers[layer].append(out_dest_layer) # to: FP:K,Q,V projection (K)
                     
-
-        print("dest_layers:",dest_layers)
-        print("to_bp_dest_layers:",to_bp_dest_layers)
+        # print("dest_layers:",dest_layers)
+        # print("to_bp_dest_layers:",to_bp_dest_layers)
     
     return dest_layers, to_bp_dest_layers, num_to_bp_transfer_byte_to_layer
+
+def generate_chip2chip_num_bit(config,num_used_chiplets, num_used_static_chiplet_all_layers, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer):
+    
+    num_bits_nop_eachLayer = [[0 for _ in range(len(dest_layers))] for _ in range(len(dest_layers))]
+    num_bits_src_chip_to_dest_chip = [[0 for _ in range(num_used_chiplets)] for _ in range(num_used_chiplets)]
+    
+    # loop: src_layer, find if the dest_layers of each src_layer need NoP
+    for layer_idx in range(len(num_chiplet_eachLayer)):
+        # print("layer_idx:",layer_idx)
+        for dest_layer in dest_layers[layer_idx]:
+            
+            # if the src_layer_begin_chip and dest_layer_begin_chip are not on same chip -> need NoP, or 
+            # if src_layer_begin_chip and dest_layer_begin_chip are on same chip, and src_layer and dest_layer are both dynamic layers, and two layers need diff num of chips -> need NoP
+            if ((layer_location_begin_chiplet[dest_layer] != layer_location_begin_chiplet[layer_idx]) | ((layer_location_begin_chiplet[dest_layer] == num_used_static_chiplet_all_layers) & (layer_location_begin_chiplet[layer_idx] == num_used_static_chiplet_all_layers) & (num_chiplet_eachLayer[layer_idx] != num_chiplet_eachLayer[dest_layer]))):
+                # print("dest_layer:",dest_layer)
+                trace = np.array([[0,0,0]])
+                
+                num_src_chiplet = num_chiplet_eachLayer[layer_idx]
+                num_dst_chiplet = num_chiplet_eachLayer[dest_layer]
+                # print("num_src_chiplet:",num_src_chiplet)
+                # print("num_dst_chiplet:",num_dst_chiplet)
+                
+                src_chiplet_begin = layer_location_begin_chiplet[layer_idx]
+                src_chiplet_end = src_chiplet_begin + num_src_chiplet - 1
+                # print("src_chiplet_begin:",src_chiplet_begin)
+                # print("src_chiplet_end:",src_chiplet_end)
+                
+                dst_chiplet_begin = layer_location_begin_chiplet[dest_layer]
+                dst_chiplet_end = dst_chiplet_begin + num_dst_chiplet - 1
+                # print("dst_chiplet_begin:",dst_chiplet_begin)
+                # print("dst_chiplet_end:",dst_chiplet_end)
+                
+                num_bits_per_chiplet = math.ceil(num_in_eachLayer[dest_layer]*config.BitWidth_in/(num_src_chiplet*num_dst_chiplet))
+                
+                num_bits_nop_eachLayer[layer_idx][dest_layer] += num_in_eachLayer[dest_layer]*config.BitWidth_in
+
+                for dest_chiplet_idx in range(dst_chiplet_begin, dst_chiplet_end+1):
+                    for src_chiplet_idx in range(src_chiplet_begin, src_chiplet_end+1):
+                        # trace = [trace; src_chiplet_idx-1 dest_chiplet_idx-1 timestamp]
+                        if src_chiplet_idx != dest_chiplet_idx: 
+                            # if src_chip is dest_chip, then no need for nop
+                            trace = np.append(trace, [[src_chiplet_idx, dest_chiplet_idx, num_bits_per_chiplet]], axis=0)
+    
+                            # # get a two-dimension list: num_bits of every src_chip to every dest_chip
+                            num_bits_src_chip_to_dest_chip[src_chiplet_idx][dest_chiplet_idx] += num_bits_per_chiplet
+                            
+                trace = np.delete(trace, 0, 0)
+    return num_bits_nop_eachLayer, num_bits_src_chip_to_dest_chip

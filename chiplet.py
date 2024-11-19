@@ -34,12 +34,12 @@ class Chiplet:
             self.accumulator = Accumulator(config,self.technode,memory_cell_type,self.chiplet_width * self.pe.pe_width * self.pe.subarray.subarray_width)
         elif chiplet_type == 'static_2':
             self.technode = config.dynamic_chiplet_technode
-            self.chiplet_height = config.static_chiplet_height # num of PE rows in a chiplet
-            self.chiplet_width = config.static_chiplet_width # num of PE cols in a chiplet
+            self.chiplet_height = config.static2_chiplet_height # num of PE rows in a chiplet
+            self.chiplet_width = config.static2_chiplet_width # num of PE cols in a chiplet
             self.memory_cell_type = memory_cell_type # 'eDRAM','RRAM', none (acc_and_buffer)
             self.noc = Noc(config,self.technode,chiplet_type)
 
-            self.buffer_size = (self.chiplet_height * self.chiplet_width) * (config.static_pe_height * config.static_pe_width) * (config.static_subarray_height * config.static_subarray_width) * config.static2_chip_sram_buffer_ratio
+            self.buffer_size = (self.chiplet_height * self.chiplet_width) * (config.static2_pe_height * config.static2_pe_width) * (config.static2_subarray_height * config.static2_subarray_width) * config.static2_chip_sram_buffer_ratio
             self.buffer_mem_height = config.chip_buffer_core_height
             self.buffer_mem_width = config.chip_buffer_core_width * math.ceil(self.buffer_size / self.buffer_mem_height / config.chip_buffer_core_width)
             self.buffer = Buffer(config,self.technode,'SRAM',self.buffer_mem_width,self.buffer_mem_height)

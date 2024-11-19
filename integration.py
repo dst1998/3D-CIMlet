@@ -12,6 +12,10 @@ class Integration(ABC):
 
 class Integration2D(Integration):
     def __init__(self,config,maxnum_layer_in_bit,num_used_static_chiplet,num_used_semi_static_chiplet,num_used_dynamic_chiplet):
+        
+        self.total_IO_cell_area_40nm = 62.65 * 1E-12 * 8
+        self.static_chiplet_technode = config.static_chiplet_technode
+        self.dynamic_chiplet_technode = config.dynamic_chiplet_technode
 
         self.static0_chiplet = Chiplet(config,chiplet_type='static_0',memory_cell_type=config.static_chiplet_memory_cell_type,maxnum_layer_in_bit=maxnum_layer_in_bit)
         
@@ -36,10 +40,19 @@ class Integration2D(Integration):
         # reticle limit
         if self.static0_chiplet.get_area() > 858E-06 or self.static2_chiplet.get_area() > 858E-06 or self.dynamic_chiplet.get_area() > 858E-06:
             print("Exit from Integration function: There exist a chip larger than reticle limit")
-            sys.exit()
+            # sys.exit()
 
-        area = self.static0_chiplet.get_area() * self.num_static_chiplet + self.static2_chiplet.get_area() * self.num_semi_static_chiplet + self.dynamic_chiplet.get_area() * self.num_dynamic_chiplet + self.logic_chiplet.get_area()
-        area *= 1.1
+        area = (self.static0_chiplet.get_area() + self.total_IO_cell_area_40nm * (math.pow(self.static_chiplet_technode, 2)/math.pow(40,2))) * self.num_static_chiplet + (self.static2_chiplet.get_area() + self.total_IO_cell_area_40nm * (math.pow(self.static_chiplet_technode, 2)/math.pow(40,2))) * self.num_semi_static_chiplet + (self.dynamic_chiplet.get_area() + self.total_IO_cell_area_40nm * (math.pow(self.dynamic_chiplet_technode, 2)/math.pow(40,2))) * self.num_dynamic_chiplet 
+        
+        # area +=  self.logic_chiplet.get_area()
+        # area *= 1.1
+        
+        # add die-to-die spacing (assume trace len.: 300~500um)
+        spacing_len = 300e-6
+        num_die = self.num_static_chiplet + self.num_dynamic_chiplet
+        num_die_spacing = math.ceil(math.sqrt(num_die)) - 1
+        area += (num_die_spacing * spacing_len) * math.sqrt(area) * 2
+        
         return area
 
 class Integration2_5D(Integration):
@@ -75,12 +88,14 @@ class Integration2_5D(Integration):
         # reticle limit
         if self.static0_chiplet.get_area() > 858E-06 or self.static2_chiplet.get_area() > 858E-06 or self.dynamic_chiplet.get_area() > 858E-06:
             print("Exit from Integration function: There exist a chip larger than reticle limit")
-            sys.exit()
+            # sys.exit()
 
-        area = self.static0_chiplet.get_area() * self.num_static_chiplet + self.static2_chiplet.get_area() * self.num_semi_static_chiplet + self.dynamic_chiplet.get_area() * self.num_dynamic_chiplet + self.logic_chiplet.get_area()
+        area = self.static0_chiplet.get_area() * self.num_static_chiplet + self.static2_chiplet.get_area() * self.num_semi_static_chiplet + self.dynamic_chiplet.get_area() * self.num_dynamic_chiplet 
+        # area += self.logic_chiplet.get_area()
+        
         # add die-to-die spacing (assume trace len.: 300~500um)
-        spacing_len = 500e-6
-        num_die = self.num_static_chiplet + self.num_dynamic_chiplet + 1
+        spacing_len = 300e-6
+        num_die = self.num_static_chiplet + self.num_dynamic_chiplet
         num_die_spacing = math.ceil(math.sqrt(num_die)) - 1
         area += (num_die_spacing * spacing_len) * math.sqrt(area) * 2
         
@@ -114,10 +129,11 @@ class Integration3D(Integration):
         # reticle limit
         if self.static0_chiplet.get_area() > 858E-06 or self.static2_chiplet.get_area() > 858E-06 or self.dynamic_chiplet.get_area() > 858E-06:
             print("Exit from Integration function: There exist a chip larger than reticle limit")
-            sys.exit()
+            # sys.exit()
 
-        self.area = max(self.static0_chiplet.get_area(), self.static2_chiplet.get_area(), self.dynamic_chiplet.get_area(), self.logic_chiplet.get_area())
-        # self.total_tsv_area = self.tsv.CalculateArea() * (self.logic_chiplet.buffer_mem_width + self.logic_chiplet.buffer_mem_height)
+        # self.area = max(self.static0_chiplet.get_area(), self.static2_chiplet.get_area(), self.dynamic_chiplet.get_area(), self.logic_chiplet.get_area())
+        
+        self.area = max(self.static0_chiplet.get_area(), self.static2_chiplet.get_area(), self.dynamic_chiplet.get_area())
         
         self.total_tsv_area = self.tsv.CalculateArea() * self.num_tsv
         self.area += self.total_tsv_area

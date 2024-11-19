@@ -191,14 +191,31 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             total_latency = total_latency + int(latency)
     
     
-            power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
+            # power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
+            
+            # 查找日志文件中包含 "Total Power" 的最后一行
+            grep_power_result = os.popen('grep "Total Power" ' + log_file + ' | tail -1').read().strip()
+
+            if grep_power_result:  # 如果找到了匹配行
+                # 提取第四个字段的值并转换为浮点数
+                power = os.popen('echo "' + grep_power_result + '" | awk \'{print $4}\'').read().strip()
+            else:  # 如果没有找到
+                power = "0"
     
             print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power + '\t' + 'mW' +'\n')
             
             total_power = total_power + float(power)
     
     
-            area = os.popen('grep "Total Area" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
+            # area = os.popen('grep "Total Area" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
+            # 查找日志文件中包含 "Total Power" 的最后一行
+            grep_area_result = os.popen('grep "Total Area" ' + log_file + ' | tail -1').read().strip()
+
+            if grep_area_result:  # 如果找到了匹配行
+                # 提取第四个字段的值并转换为浮点数
+                area = os.popen('echo "' + grep_area_result + '" | awk \'{print $4}\'').read().strip()
+            else:  # 如果没有找到
+                area = "0"
     
             # print('[ INFO] Area for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + area + '\t' + 'um^2' + '\n')
     

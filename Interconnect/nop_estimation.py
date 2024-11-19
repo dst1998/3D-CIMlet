@@ -67,6 +67,8 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
     
     num_bits_nop_eachLayer = generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale)
 
+    print("n_bits_all_chiplets : ",sum(sum(row) for row in num_bits_nop_eachLayer))
+
     print('Trace generation for NoP is finished')
     print('Starting to simulate the NoP trace')
     

@@ -5,25 +5,32 @@ import math
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv' # 'BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_16token.csv' 'Transformer_adapter_cl_semi_static_3layer_12head_16token.csv'
+		self.model_filename = 'BERT_base_adapter_inf_12layer_12head_128token.csv'
+		# 'Gpt2_inf_12layer_12head_128token.csv','Gpt2_inf_12layer_12head_1023token.csv','Gpt2_inf_new_12layer_12head_128token.csv','Gpt2_inf_new_12layer_12head_1023token.csv','DeiT_inf_12layer_12head_196token.csv','BERT_base_adapter_inf_12layer_12head_128token.csv','BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_16token.csv' 'Transformer_adapter_cl_semi_static_3layer_12head_16token.csv' 'BERT_base_adapter_inf_learned_static_weights_12layer_12head_128token.csv','BERT_base_adapter_inf_pretrained_weights_12layer_12head_128token.csv','BERT_base_ft_semi_static_12layer_12head_128token.csv','BERT_base_ft_new_semi_static_12layer_12head_128token.csv'
 		
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
 		self.num_T_head = int(re.findall(r'(\d+)head', self.model_filename)[0])
-		self.train_batch_size = 32
+		self.train_batch_size = 16
+		self.train_pipeline_parallel = 0
 		self.NetStructure = []
 		self.NetStructure_layer_def = []
 		self.clk_freq = 800e6 # TODO: depends on technode and memory device type (e.g. edram or rram)
 		self.eDRAM_clk_freq = 200e6
 		self.RRAM_clk_freq = 800e6
-		self.nop_clk_freq_2d = 0.2E09 # 5.3e9 (MCM:pin speed)
-		self.nop_clk_freq_2_5d_3d = 0.2E09 # 0.2GHz
+		self.nop_clk_freq_2d = 12.5E09 #1.6E09
+		self.nop_clk_freq_3d = 0.2E09 # 0.2GHz
+		self.nop_clk_freq_2_5d = 32.75E09
 		# self.nop_bw_density_2_5d = 1.6E12 # CoWoS: 1.6 Tb/s/mm2
 		# self.nop_bw_density_3d = 9456E12 # 3D SoIC F2B (SoIC bond & TSV) 9456 Tb/s/mm2
-		self.Packaging_dimension = 2.5 # 2, 2.5, 3
+		self.Packaging_dimension = 3 # 2, 2.5, 3
 		self.pitch_size_2_5d = 40E-06 # CoWoS
 		self.pitch_size_3d = 9E-06 # 3D SoIC F2B (SoIC bond & TSV)
 
-		self.static2_chip_sram_buffer_ratio = 1/math.pow(2,8) # pow(2,4), pow(2,6), pow(2,8), pow(2,10), pow(2,12)
+		self.ebit_2d = 6.6e-12
+		self.ebit_2_5d = 0.26e-12
+		self.ebit_3d = 0.015e-12
+
+		self.static2_chip_sram_buffer_ratio = 1/math.pow(2,4) # pow(2,4), pow(2,6), pow(2,8), pow(2,10), pow(2,12)
 		# 0: ratio = 0, all sram
 		# 1: ratio = 1/8
 		# 2: ratio = 2/8
@@ -116,35 +123,41 @@ class Config:
 		self.static_subarray_height = 256 # num of cell rows in a subarray
 		self.static_subarray_width = 256 # num of cell cols in a subarray
 		self.static_subarray_size = self.static_subarray_height * self.static_subarray_width
-		self.dynamic_subarray_height = 32 # num of cell rows in a subarray
-		self.dynamic_subarray_width = 256 # num of cell cols in a subarray
+		self.static2_subarray_height = 256 # num of cell rows in a subarray
+		self.static2_subarray_width = 256 # num of cell cols in a subarray
+		self.dynamic_subarray_height = 128 # num of cell rows in a subarray
+		self.dynamic_subarray_width = 128 # num of cell cols in a subarray
 		self.dynamic_subarray_size = self.dynamic_subarray_height * self.dynamic_subarray_width
 
 		self.subarray_readout_mux = 8
 
 		# -----pe-----
-		self.static_pe_height = 6 # num of subarray rows in a pe
+		self.static_pe_height = 8 # num of subarray rows in a pe
 		self.static_pe_width = 8 # num of subarray cols in a pe
 		self.static_pe_size = self.static_pe_height * self.static_pe_width
-		self.dynamic_pe_height = 1 # num of subarray rows in a pe
-		self.dynamic_pe_width = 2 # num of subarray cols in a pe
+		self.static2_pe_height = 16 # num of subarray rows in a pe
+		self.static2_pe_width = 8 # num of subarray cols in a pe
+		self.dynamic_pe_height = 8 # num of subarray rows in a pe
+		self.dynamic_pe_width = 8 # num of subarray cols in a pe
 		self.dynamic_pe_size = self.dynamic_pe_height * self.dynamic_pe_width
 
 		# -----chiplet-----
 		# -----static chiplet-----
 		self.static_chiplet_technode = 40 # 40, 130
 		self.static_chiplet_memory_cell_type = 'RRAM'
-		self.num_static_chiplet = 20
-		self.static_chiplet_height = 8 # num of PE rows in a chiplet
-		self.static_chiplet_width = 8 # num of PE cols in a chiplet
+		self.num_static_chiplet = 500
+		self.static_chiplet_height = 4 # num of PE rows in a chiplet
+		self.static_chiplet_width = 4 # num of PE cols in a chiplet
 		self.static_chiplet_size = self.static_chiplet_height * self.static_chiplet_width
+		self.static2_chiplet_height = 4 # num of PE rows in a chiplet
+		self.static2_chiplet_width = 8 # num of PE cols in a chiplet
 		
 		# -----dynamic chiplet-----
-		self.dynamic_chiplet_technode = 28 # 14,16,22,28,40,65,130
+		self.dynamic_chiplet_technode = 40 # 14,16,22,28,40,65,130
 		self.dynamic_chiplet_memory_cell_type = 'eDRAM'
-		self.num_dynamic_chiplet = 9
-		self.dynamic_chiplet_height = 4 # num of PE rows in a chiplet
-		self.dynamic_chiplet_width = 4 # num of PE cols in a chiplet
+		self.num_dynamic_chiplet = 100
+		self.dynamic_chiplet_height = 1 # num of PE rows in a chiplet
+		self.dynamic_chiplet_width = 1 # num of PE cols in a chiplet
 		self.dynamic_chiplet_size = self.dynamic_chiplet_height * self.dynamic_chiplet_width
 		
 		# -----logic chiplet-----
@@ -159,28 +172,11 @@ class Config:
 		self.BitWidth_in = 8
 		self.BitWidth_weight = 8
 
-		self.pe_bus_width_2D = 32 # SIAM: 32
+		self.pe_bus_width_2D = 256 # SIAM: 32
 		self.chiplet_bus_width_2D = 32 # SIAM: 8,16,32
-		self.scale_noc = 100 # SIAM: 100
-		self.scale_nop = 10 # SIAM: 10
+		self.scale_noc = 10000 # SIAM: 100
+		self.scale_nop = 100 # SIAM: 10
 		self.type = 'Homogeneous_Design'
-		
-		# self.eDRAM_refresh_retention_time_28nm = 0.155e-03
-		# self.eDRAM_refresh_retention_time_40nm = 20e-6
-		# self.eDRAM_refresh_retention_time_65nm = 0.04e-03
-		# self.eDRAM_refresh_retention_time_130nm = 0.95e-03
-
-		# self.eDRAM_buffer_refresh_retention_time_28nm = 1e6 # static
-		# self.eDRAM_buffer_refresh_retention_time_40nm = 4.00E-03
-		# self.eDRAM_buffer_refresh_retention_time_65nm = 1.10E-04
-		# self.eDRAM_buffer_refresh_retention_time_130nm = 9.50E-04
-
-		# self.RRAM_refresh_retention_time_28nm = 1e6
-		# self.RRAM_refresh_retention_time_40nm = 1e6
-		# self.RRAM_refresh_retention_time_65nm = 1e6
-		# self.RRAM_refresh_retention_time_130nm = 1e6
-  
-		# self.RRAM_refresh_retention_time = 1e6
 		
 		# from Neurosim:
 		AR = 0
@@ -393,7 +389,11 @@ class Config:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if (first_row[1] in ["Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft","BERT_base_adapter_inf","BERT_base_adapter_cl","BERT_small_adapter_inf","BERT_small_adapter_cl"]):
+				if (first_row[1] in [
+        				"Transformer_inf","Transformer_adapter_inf","Transformer_adapter_cl","Transformer_ft",
+                        "BERT_base_inf","Gpt2_inf","Gpt2_inf_new","DeiT_inf",
+                        "BERT_base_adapter_inf","BERT_base_adapter_cl","BERT_small_adapter_inf","BERT_small_adapter_cl",
+						"BERT_base_ft"]):
 					for row in csv_reader:
 						row = row[:-1]
 						converted_row = [int(item) for item in row]
@@ -410,7 +410,10 @@ class Config:
 			with open(self.model_filename, mode='r', newline='') as file:
 				csv_reader = csv.reader(file)
 				first_row = next(csv_reader)  # Read the first line to determine the model type
-				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl","Transformer_ft","BERT_base_adapter_inf","BERT_base_adapter_cl","BERT_small_adapter_inf","BERT_small_adapter_cl"]:
+				if first_row[1] in ["Transformer_inf", "Transformer_adapter_inf", "Transformer_adapter_cl","Transformer_ft",
+                "BERT_base_inf","Gpt2_inf","Gpt2_inf_new","DeiT_inf",
+                "BERT_base_adapter_inf","BERT_base_adapter_cl","BERT_small_adapter_inf","BERT_small_adapter_cl",
+				"BERT_base_ft"]:
 					for row in csv_reader:
 						row_def = row[-1]
 						self.NetStructure_layer_def.append(row_def)  # Add each row to the NetStructure list1
