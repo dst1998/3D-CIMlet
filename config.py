@@ -5,7 +5,7 @@ import math
 
 class Config:
 	def __init__(self):
-		self.model_filename = 'BERT_base_adapter_inf_12layer_12head_128token.csv'
+		self.model_filename = 'BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv'
 		# 'Gpt2_inf_12layer_12head_128token.csv','Gpt2_inf_12layer_12head_1023token.csv','Gpt2_inf_new_12layer_12head_128token.csv','Gpt2_inf_new_12layer_12head_1023token.csv','DeiT_inf_12layer_12head_196token.csv','BERT_base_adapter_inf_12layer_12head_128token.csv','BERT_base_adapter_cl_semi_static_12layer_12head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_128token.csv', 'BERT_small_adapter_cl_semi_static_4layer_4head_16token.csv' 'Transformer_adapter_cl_semi_static_3layer_12head_16token.csv' 'BERT_base_adapter_inf_learned_static_weights_12layer_12head_128token.csv','BERT_base_adapter_inf_pretrained_weights_12layer_12head_128token.csv','BERT_base_ft_semi_static_12layer_12head_128token.csv','BERT_base_ft_new_semi_static_12layer_12head_128token.csv'
 		
 		self.net_name = self.model_filename.rsplit('.csv', 1)[0]
@@ -153,7 +153,7 @@ class Config:
 		self.static2_chiplet_width = 8 # num of PE cols in a chiplet
 		
 		# -----dynamic chiplet-----
-		self.dynamic_chiplet_technode = 40 # 14,16,22,28,40,65,130
+		self.dynamic_chiplet_technode = 14 # 14,16,22,28,40,65,130
 		self.dynamic_chiplet_memory_cell_type = 'eDRAM'
 		self.num_dynamic_chiplet = 100
 		self.dynamic_chiplet_height = 1 # num of PE rows in a chiplet

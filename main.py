@@ -614,35 +614,35 @@ def main(config):
         # print("extra_bp_weight_storage_energy_eachLayer:",extra_bp_weight_storage_energy_eachLayer)
     # ===============            analysis done: hybrid storage             =============== #
     
-    # # =============== analysis: adapter-layer weight gradient storage location - store back to learned-weight-rram or refresh in advnced technode edram. depends on 1. learning batch size, 2. 2D/2.5D/3D link energy/bit, 3. adapter-layer location in whole learning model =============== #
-    # adapter_weight_gradient_storage_latency_eachLayer = [0] * len((NetStructure))
-    # adapter_weight_gradient_edram_storage_energy_eachLayer = [0] * len((NetStructure))
-    # adapter_weight_gradient_rram_storage_energy_eachLayer = [0] * len((NetStructure))
-    # adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer = [0] * len((NetStructure))
+    # =============== analysis: adapter-layer weight gradient storage location - store back to learned-weight-rram or refresh in advnced technode edram. depends on 1. learning batch size, 2. 2D/2.5D/3D link energy/bit, 3. adapter-layer location in whole learning model =============== #
+    adapter_weight_gradient_storage_latency_eachLayer = [0] * len((NetStructure))
+    adapter_weight_gradient_edram_storage_energy_eachLayer = [0] * len((NetStructure))
+    adapter_weight_gradient_rram_storage_energy_eachLayer = [0] * len((NetStructure))
+    adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer = [0] * len((NetStructure))
     
-    # if any(keyword in config.model_filename for keyword in ("cl")):
-    #     for layer_idx, layer in enumerate(NetStructure):
-    #         for dest_layer_idx in (to_bp_dest_layers[layer_idx]):
-    #             if NetStructure_layer_def[dest_layer_idx] in ('W Gradient:weight_adapter1-1,','W Gradient:weight_adapter1-2,','W Gradient:weight_adapter2-1,','W Gradient:weight_adapter2-2,'):
-    #                 if config.train_pipeline_parallel == 1:
-    #                     adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] = sum(total_latency_eachLayer) - layers_process_latency_eachDestLayer[dest_layer_idx] + 2 * (config.train_batch_size - 1) * total_latency_eachLayer[0]
-    #                 else:
-    #                     adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] = sum(total_latency_eachLayer) - layers_process_latency_eachDestLayer[dest_layer_idx] + 2 * (config.train_batch_size - 1) * sum(total_latency_eachLayer)
+    if any(keyword in config.model_filename for keyword in ("cl")):
+        for layer_idx, layer in enumerate(NetStructure):
+            for dest_layer_idx in (to_bp_dest_layers[layer_idx]):
+                if NetStructure_layer_def[dest_layer_idx] in ('W Gradient:weight_adapter1-1,','W Gradient:weight_adapter1-2,','W Gradient:weight_adapter2-1,','W Gradient:weight_adapter2-2,'):
+                    if config.train_pipeline_parallel == 1:
+                        adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] = sum(total_latency_eachLayer) - layers_process_latency_eachDestLayer[dest_layer_idx] + 2 * (config.train_batch_size - 1) * total_latency_eachLayer[0]
+                    else:
+                        adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] = sum(total_latency_eachLayer) - layers_process_latency_eachDestLayer[dest_layer_idx] + 2 * (config.train_batch_size - 1) * sum(total_latency_eachLayer)
                     
-    #                 print("adapter_weight_gradient_storage_latency_eachLayer",dest_layer_idx,":",adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx])
+                    print("adapter_weight_gradient_storage_latency_eachLayer",dest_layer_idx,":",adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx])
                     
-    #                 refresh_retention_time = getattr(config, f'eDRAM_refresh_retention_time_{config.dynamic_chiplet_technode}nm') # should be advanced technode
-    #                 num_refresh_times = math.ceil(adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] / refresh_retention_time)
-    #                 refresh_power_per_bit = getattr(config, f'eDRAM_refresh_power_per_bit_{config.dynamic_chiplet_technode}nm') # should be advanced technode
-    #                 adapter_weight_gradient_edram_storage_energy_eachLayer[dest_layer_idx] =  (num_refresh_times) * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
+                    refresh_retention_time = getattr(config, f'eDRAM_refresh_retention_time_{config.dynamic_chiplet_technode}nm') # should be advanced technode
+                    num_refresh_times = math.ceil(adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] / refresh_retention_time)
+                    refresh_power_per_bit = getattr(config, f'eDRAM_refresh_power_per_bit_{config.dynamic_chiplet_technode}nm') # should be advanced technode
+                    adapter_weight_gradient_edram_storage_energy_eachLayer[dest_layer_idx] =  (num_refresh_times) * refresh_power_per_bit * (100* 1/config.eDRAM_clk_freq)
                     
-    #                 adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] = getattr(config, f'RRAM_write_energy_per_bit_{config.static_chiplet_technode}nm') + config.ebit_2d # can change to 2/2.5/3d
-    #                 adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx] = adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] / adapter_weight_gradient_edram_storage_energy_eachLayer[dest_layer_idx]
-    #                 print("adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer",dest_layer_idx,":",adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx])
-    #                 print("refresh_retention_time :",refresh_retention_time)
-    #                 print("num_refresh_times :",num_refresh_times)
-    #                 print("refresh_power_per_bit :",refresh_power_per_bit)
-    # # =============== analysis done: adapter-layer weight gradient storage location =============== #
+                    adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] = getattr(config, f'RRAM_write_energy_per_bit_{config.static_chiplet_technode}nm') + config.ebit_3d # can change to 2/2.5/3d
+                    adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx] = adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] / adapter_weight_gradient_edram_storage_energy_eachLayer[dest_layer_idx]
+                    print("adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer",dest_layer_idx,":",adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx])
+                    print("refresh_retention_time :",refresh_retention_time)
+                    print("num_refresh_times :",num_refresh_times)
+                    print("refresh_power_per_bit :",refresh_power_per_bit)
+    # =============== analysis done: adapter-layer weight gradient storage location =============== #
     
     # get total power each layer and total power each layer per PE
     total_power_eachLayer = [0] * len(NetStructure)
