@@ -10,7 +10,7 @@ def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_la
     # print("num_pes_each_layer:",num_pes_each_layer)
 
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
-    directory_name = '/home/du335/simulator/to_interconnect'
+    # directory_name = '/home/du335/simulator/to_interconnect'
     # pes_csv_file_name = directory_name + '/num_pes_per_layer_chiplet.csv'
     # num_pes_each_layer = pd.read_csv(pes_csv_file_name, header=None)
     # num_pes_each_layer = num_pes_each_layer.to_numpy()
@@ -31,7 +31,7 @@ def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_la
     # pe_begin_array = chiplet_layer_range[:, 0]
     # pe_end_array = chiplet_layer_range[:, 1]
     
-    dir_name = '/home/du335/simulator/Interconnect/' + netname + '_NoC_traces' + '/' + type + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale)
+    dir_name = '/home/du335/3D-CIMlet/Interconnect/' + netname + '_NoC_traces' + '/' + type + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale)
             
     
     if (os.path.isdir(dir_name)):

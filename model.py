@@ -38,40 +38,6 @@ class GetData:
             print(f"File '{self.model_filename}' not found.")
         except Exception as e:
             print(f"An error occurred: {str(e)}")
-    
-    # def load_hardware_config(self): # add try/except later
-    #     with open(self.hw_config_filename, 'r') as file:
-    #         for line in file:
-    #             # remove spaces at the beginning and end of the line and remove the comment section
-    #             line = line.strip().split('#')[0].strip()
-            
-    #             # ignore blank line
-    #             if not line:
-    #                 continue
-
-    #             key, value = line.split('=')
-            
-    #             # remove spaces from the ends of keys and values
-    #             key = key.strip()
-    #             value = value.strip()
-            
-    #             self.hw_config[key] = value
-
-    #     return self.hw_config
-
-
-
-
-
-# # e.g.
-# csv_file = "/home/nanoxing/a/du335/purdue-glibreth-server/simulator/user_defined_example.csv" 
-# config_file = "/home/nanoxing/a/du335/purdue-glibreth-server/simulator/hw_config.txt" 
-# model_data_loader = GetData(csv_file, config_file)
-# model_data_loader.load_model()
-# for row in model_data_loader.NetStructure:
-#     print(row)
-# hw_config = GetData(csv_file,config_file).load_hardware_config()
-# print(hw_config)
 
 
 

@@ -46,7 +46,7 @@ df = pd.DataFrame(data)
 df.iloc[1:, :-1] = df.iloc[1:, :-1].astype(int)
 
 # Saved as a new CSV file
-output_file_path = '/home/du335/simulator/' + model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
+output_file_path = '/home/du335/3D-CIMlet/' + model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
 df.to_csv(output_file_path, index=False, header=False)
 
 print(f"New file generated: {output_file_path}")

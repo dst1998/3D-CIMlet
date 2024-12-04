@@ -22,23 +22,23 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
 
 
     trace_directory_name = str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/'
-    trace_directory_full_path = '/home/du335/simulator/Interconnect/' + netname + '_NoC_traces' + '/' + trace_directory_name
+    trace_directory_full_path = '/home/du335/3D-CIMlet/Interconnect/' + netname + '_NoC_traces' + '/' + trace_directory_name
     
     results_directory_name = trace_directory_name
-    results_directory_full_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + results_directory_name
+    results_directory_full_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + results_directory_name
                 
     run_booksim_noc(config,trace_directory_full_path,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,chiplet_static_type)
     if (not os.path.exists(results_directory_full_path)):
         os.makedirs(results_directory_full_path)
     
     os.system('rm -rf ' + results_directory_full_path + '/logs')
-    os.system('mv /home/du335/simulator/Interconnect/logs/ ' + results_directory_full_path)
+    os.system('mv /home/du335/3D-CIMlet/Interconnect/logs/ ' + results_directory_full_path)
 
     print('finish simulate the NoC trace')
 
     # return area
     area = 0.0
-    noc_area_file_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Area_chiplet.csv'
+    noc_area_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Area_chiplet.csv'
 
     with open(noc_area_file_path, 'r') as file:
         for line in file:
@@ -57,7 +57,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
 
     # return latency
     latency_list = []
-    noc_latency_file_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Latency_chiplet.csv'
+    noc_latency_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Latency_chiplet.csv'
 
     with open(noc_latency_file_path, 'r') as file:
         for line in file:
@@ -77,7 +77,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
 
     # return energy
     power_list = []
-    noc_power_file_path = '/home/du335/simulator/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Energy_chiplet.csv'
+    noc_power_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Energy_chiplet.csv'
 
     with open(noc_power_file_path, 'r') as file:
         for line in file:

@@ -10,7 +10,7 @@ def get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chip
     chiplet_layer_range = np.full((config.num_static_chiplet, 2), -1)  # Initialize to be -1，have not placed any layer
     layer_location_begin_chiplet = [-1 for _ in range(len(Num_StaticPE_eachLayer))] # tell this layer is on which chiplet
     
-    last_chiplet_used = 0  # 用于记录最后一个使用的chiplet索引
+    last_chiplet_used = 0  # Used to record the last used chiplet index
 
     for layer_idx, layer in enumerate(range(len(Num_StaticPE_eachLayer))):
         print("layer:", layer)
@@ -19,7 +19,7 @@ def get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chip
         if required_pes == 0:  # is dynamic layer，skip layer
             continue
         
-        # 计算这一层需要多少个chiplet
+        # Calculate how many chiplets are needed for this layer
         # num_static_chiplet_this_layer = ceil(required_pes / static_chiplet_size)
         num_static_chiplet_this_layer = num_static_chiplet_eachLayer[layer_idx]
 
@@ -28,7 +28,7 @@ def get_static_chiplet_layer_range(config,Num_StaticPE_eachLayer,num_static_chip
         #     print(f"Layer {layer} requires more chiplets than available.")
         #     break
         
-        # 在多个chiplet间平分这一层的PE需求
+        # Split the PE requirements for this layer equally across multiple chiplets
         if num_static_chiplet_this_layer >1:
             pe_used_per_chiplet = math.ceil(required_pes / num_static_chiplet_this_layer)
             last_chiplet_used += 1 # the layer need more than 1 chiplet, then start with a new chiplet

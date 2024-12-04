@@ -18,10 +18,10 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
     file_counter = 0
     
     # Create directory to store config files
-    os.system('mkdir -p /home/du335/simulator/Interconnect/logs/configs')
+    os.system('mkdir -p /home/du335/3D-CIMlet/Interconnect/logs/configs')
 
     # Open the file and check if it has content
-    area_file_path = '/home/du335/simulator/Interconnect/logs/Area_chiplet.csv'
+    area_file_path = '/home/du335/3D-CIMlet/Interconnect/logs/Area_chiplet.csv'
     # Check if the file exists and if it is empty
     if os.path.exists(area_file_path):
         with open(area_file_path, 'r+') as area_file:
@@ -31,7 +31,7 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
                 area_file.truncate()  # Clear the file
 
     # Open the file and check if it has content
-    latency_file_path = '/home/du335/simulator/Interconnect/logs/Latency_chiplet.csv'
+    latency_file_path = '/home/du335/3D-CIMlet/Interconnect/logs/Latency_chiplet.csv'
     # Check if the file exists and if it is empty
     if os.path.exists(latency_file_path):
         with open(latency_file_path, 'r+') as latency_file:
@@ -41,7 +41,7 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
                 latency_file.truncate()  # Clear the file
     
     # Open the file and check if it has content
-    power_file_path = '/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv'
+    power_file_path = '/home/du335/3D-CIMlet/Interconnect/logs/Energy_chiplet.csv'
     # Check if the file exists and if it is empty
     if os.path.exists(power_file_path):
         with open(power_file_path, 'r+') as power_file:
@@ -90,10 +90,10 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             mesh_size = int(mesh_sizes_per_chiplet[chiplet_idx])
     
             # Open read file handle of config file
-            fp = open('/home/du335/simulator/Interconnect/mesh_config_trace_based', 'r')
+            fp = open('/home/du335/3D-CIMlet/Interconnect/mesh_config_trace_based', 'r')
     
             # Set path to config file
-            config_file = '/home/du335/simulator/Interconnect/logs/configs/chiplet_' + str(chiplet_idx) + '_mesh_config'
+            config_file = '/home/du335/3D-CIMlet/Interconnect/logs/configs/chiplet_' + str(chiplet_idx) + '_mesh_config'
     
             # Open write file handle for config file
             outfile = open(config_file, 'w')
@@ -128,14 +128,14 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             outfile.close()
     
             # Set path to log file for trace files
-            log_file = '/home/du335/simulator/Interconnect/logs/chiplet_' + str(chiplet_idx) + '_layer_' + str(run_id) + '.log'
+            log_file = '/home/du335/3D-CIMlet/Interconnect/logs/chiplet_' + str(chiplet_idx) + '_layer_' + str(run_id) + '.log'
     
             # Copy trace file
             os.system('cp ' + file + ' ./trace_file.txt')
     
             # Run Booksim with config file and save log
-            os.system('chmod +x /home/du335/simulator/Interconnect/booksim')
-            booksim_command = '/home/du335/simulator/Interconnect/booksim ' + config_file + ' > ' + log_file
+            os.system('chmod +x /home/du335/3D-CIMlet/Interconnect/booksim')
+            booksim_command = '/home/du335/3D-CIMlet/Interconnect/booksim ' + config_file + ' > ' + log_file
             # booksim_command = '/home/du335/BOOKSIM2_trace_based/src/booksim ' + config_file + ' > ' + log_file
             os.system(booksim_command)
     
@@ -177,43 +177,43 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
             total_area = total_area + float(area)
     
         # Open output file handle to write area
-        outfile_area = open('/home/du335/simulator/Interconnect/logs/booksim_area.csv', 'a')
+        outfile_area = open('/home/du335/3D-CIMlet/Interconnect/logs/booksim_area.csv', 'a')
     
         if file_counter == 0:
             # print('No NoC for this Chiplet.')
             outfile_area.write(str(0) + '\n')
             outfile_area.close()
-            area_file = open('/home/du335/simulator/Interconnect/logs/Area_chiplet.csv', 'a')
+            area_file = open('/home/du335/3D-CIMlet/Interconnect/logs/Area_chiplet.csv', 'a')
             area_file.write('Total NoC area is' + '\t' + str(0) +  '\t' + 'um^2' + '\n')
             area_file.close()
         else:    
             outfile_area.write(str(total_area/file_counter) + '\n')
             outfile_area.close()
-            area_file = open('/home/du335/simulator/Interconnect/logs/Area_chiplet.csv', 'a')
+            area_file = open('/home/du335/3D-CIMlet/Interconnect/logs/Area_chiplet.csv', 'a')
             area_file.write('Total NoC area is' + '\t' + str(total_area/file_counter) +  '\t' + 'um^2' + '\n')
             area_file.close()
             
         # Open output file handle to write latency
-        outfile_latency = open('/home/du335/simulator/Interconnect/logs/booksim_latency.csv', 'a')
+        outfile_latency = open('/home/du335/3D-CIMlet/Interconnect/logs/booksim_latency.csv', 'a')
         outfile_latency.write(str(total_latency) + '\n')
         outfile_latency.close()
-        latency_file = open('/home/du335/simulator/Interconnect/logs/Latency_chiplet.csv', 'a')
+        latency_file = open('/home/du335/3D-CIMlet/Interconnect/logs/Latency_chiplet.csv', 'a')
         latency_file.write('Total NoC latency is' + '\t' + str(total_latency*1/chip_clk_freq) + '\t' + 's' + '\n')
         latency_file.close()
     
         # Open output file handle to write power
-        outfile_power = open('/home/du335/simulator/Interconnect/logs/booksim_power.csv', 'a')
+        outfile_power = open('/home/du335/3D-CIMlet/Interconnect/logs/booksim_power.csv', 'a')
         
         if file_counter == 0:
             outfile_power.write(str(0) + '\n')
             outfile_power.close()
-            power_file = open('/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv', 'a')
+            power_file = open('/home/du335/3D-CIMlet/Interconnect/logs/Energy_chiplet.csv', 'a')
             power_file.write('Total NoC power is' + '\t' + str(0) + '\t' + 'W' + '\n')
             power_file.close()
         else:
             outfile_power.write(str(total_power/file_counter) + '\n')
             outfile_power.close()
-            power_file = open('/home/du335/simulator/Interconnect/logs/Energy_chiplet.csv', 'a')
+            power_file = open('/home/du335/3D-CIMlet/Interconnect/logs/Energy_chiplet.csv', 'a')
             # power_file.write('Total NoC power is' + '\t' + str(total_power/file_counter) + '\t' + 'mW' + '\n')
             power_file.write('Total NoC power is' + '\t' + str(total_power/file_counter *1e-03) + '\t' + 'W' + '\n')
             power_file.close()

@@ -7,7 +7,7 @@ import shutil
 def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale):
 
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
-    directory_name = '/home/du335/simulator/to_interconnect'
+    # directory_name = '/home/du335/simulator/to_interconnect'
     # tiles_csv_file_name = directory_name + '/num_tiles_per_layer_chiplet.csv'
     # num_tiles_each_layer = pd.read_csv(tiles_csv_file_name, header=None)
     # num_tiles_each_layer = num_tiles_each_layer.to_numpy()
@@ -26,7 +26,7 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
     num_chiplets_used = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
     nop_mesh_size = math.ceil(math.sqrt(num_chiplets_used))
     
-    dir_name = '/home/du335/simulator/Interconnect/' +  netname + '_NoP_traces' + '/' + type + '_' + str(num_chiplets_used) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width)
+    dir_name = '/home/du335/3D-CIMlet/Interconnect/' +  netname + '_NoP_traces' + '/' + type + '_' + str(num_chiplets_used) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width)
             
     if (os.path.isdir(dir_name)):
         shutil.rmtree(dir_name)

@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 # read original inference file path
-file_path = '/home/du335/simulator/Transformer_adapter_inf_3layer_12head_16token.csv' 
+file_path = '/home/du335/3D-CIMlet/Transformer_adapter_inf_3layer_12head_16token.csv' 
 df = pd.read_csv(file_path, header=None)
 
 # Use regex to extract the part before "_<number>layer"
