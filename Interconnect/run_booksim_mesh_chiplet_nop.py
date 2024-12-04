@@ -1,11 +1,6 @@
 import os, re, glob, sys, math
 import numpy
 
-# # Extract command line arguments
-# trace_file_dir = sys.argv[1] #directory name
-# bus_width = sys.argv[2] #bus width
-
-
 def run_booksim_mesh_chiplet_nop(config, nop_clk_freq, trace_file_dir, bus_width):
 
 
@@ -149,13 +144,13 @@ def run_booksim_mesh_chiplet_nop(config, nop_clk_freq, trace_file_dir, bus_width
     
     
         # power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
-        # 查找日志文件中包含 "Total Power" 的最后一行
+        # Find the last line in the log file that contains “Total Power”.
         grep_power_result = os.popen('grep "Total Power" ' + log_file + ' | tail -1').read().strip()
 
-        if grep_power_result:  # 如果找到了匹配行
-            # 提取第四个字段的值并转换为浮点数
+        if grep_power_result:  # If a matching line is found
+            # Extracts the value of the fourth field and converts it to a floating point number
             power = os.popen('echo "' + grep_power_result + '" | awk \'{print $4}\'').read().strip()
-        else:  # 如果没有找到
+        else:  # If not found
             power = "0"
     
         print('[ INFO] Power for Layer : '  + str(run_id) + ' is ' + power + '\t' + 'mW' +'\n')
@@ -165,10 +160,10 @@ def run_booksim_mesh_chiplet_nop(config, nop_clk_freq, trace_file_dir, bus_width
         # area = os.popen('grep "Total Area" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
         grep_area_result = os.popen('grep "Total Area" ' + log_file + ' | tail -1').read().strip()
 
-        if grep_area_result:  # 如果找到了匹配行
-            # 提取第四个字段的值并转换为浮点数
+        if grep_area_result:  # If a matching line is found
+            # Extracts the value of the fourth field and converts it to a floating point number
             area = os.popen('echo "' + grep_area_result + '" | awk \'{print $4}\'').read().strip()
-        else:  # 如果没有找到
+        else:  # If not found
             area = "0"
     
         # print('[ INFO] Area for Chiplet : ' + str(run_id) + ' is ' + area + '\t' + 'um^2' +'\n')

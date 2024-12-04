@@ -1,16 +1,7 @@
 import os, re, glob, sys, math
-import timeit
 
 from Interconnect.generate_traces_nop import generate_traces_nop
 from Interconnect.run_booksim_mesh_chiplet_nop import run_booksim_mesh_chiplet_nop
-
-start = timeit.default_timer()
-
-# chiplet_size = 25
-# num_chiplet = 144
-# scale = 1
-# bus_width = 4
-# netname = 'VGG19_homogeneous_NoP_traces'
 
 def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, netname, chiplet_size, nop_clk_freq):
     
@@ -136,9 +127,6 @@ def nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_
     print("Total energy from booksim nop_energy_file_path:", energy)
 
     return area, total_latency, energy, num_bits_nop_eachLayer, latencyCycle_eachLayer_list
-    
-    
-    # os.system('mv /home/gkrish19/SIAM_Integration/Interconnect/logs_NoP/ ' + results_directory_full_path)
             
     
                     

@@ -4,16 +4,6 @@ import math
 import os
 import shutil
 
-#Take all below parameters as argument
-# quantization_bit = 8
-# bus_width = 32
-# netname = 'ResNet110' #'VGG-19_45.3M'
-# xbar_size = 256
-# chiplet_size = 16
-# num_chiplets = 25
-# type = 'Homogeneous Design'
-# scale = 1
-
 def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale):
 
     # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'

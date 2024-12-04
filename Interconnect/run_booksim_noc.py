@@ -91,7 +91,6 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
     
             # Open read file handle of config file
             fp = open('/home/du335/simulator/Interconnect/mesh_config_trace_based', 'r')
-            # fp = open('/home/du335/simulator/Interconnect/meshtraceconfig', 'r')
     
             # Set path to config file
             config_file = '/home/du335/simulator/Interconnect/logs/configs/chiplet_' + str(chiplet_idx) + '_mesh_config'
@@ -149,13 +148,13 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
     
             # power = os.popen('grep "Total Power" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
             
-            # 查找日志文件中包含 "Total Power" 的最后一行
+            # Find the last line in the log file that contains “Total Power”.
             grep_power_result = os.popen('grep "Total Power" ' + log_file + ' | tail -1').read().strip()
 
-            if grep_power_result:  # 如果找到了匹配行
-                # 提取第四个字段的值并转换为浮点数
+            if grep_power_result:  # If a matching line is found
+                # Extracts the value of the fourth field and converts it to a floating point number
                 power = os.popen('echo "' + grep_power_result + '" | awk \'{print $4}\'').read().strip()
-            else:  # 如果没有找到
+            else:  # If not found
                 power = "0"
     
             print('[ INFO] Power for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + power + '\t' + 'mW' +'\n')
@@ -164,13 +163,13 @@ def run_booksim_noc(config,trace_file_dir,num_used_static_chiplet_all_layers, nu
     
     
             # area = os.popen('grep "Total Area" ' + log_file + ' | tail -1 | awk \'{print $4}\'').read().strip()
-            # 查找日志文件中包含 "Total Power" 的最后一行
+            # Find the last line in the log file that contains “Total Power”.
             grep_area_result = os.popen('grep "Total Area" ' + log_file + ' | tail -1').read().strip()
 
-            if grep_area_result:  # 如果找到了匹配行
-                # 提取第四个字段的值并转换为浮点数
+            if grep_area_result:  # If a matching line is found
+                # Extracts the value of the fourth field and converts it to a floating point number
                 area = os.popen('echo "' + grep_area_result + '" | awk \'{print $4}\'').read().strip()
-            else:  # 如果没有找到
+            else:  # If not found
                 area = "0"
     
             # print('[ INFO] Area for Chiplet : ' + str(chiplet_idx)  + ' Layer : ' + str(run_id) + ' is ' + area + '\t' + 'um^2' + '\n')

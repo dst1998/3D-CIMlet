@@ -100,7 +100,3 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
     print("Total energy from booksim noc_energy_file_path:", energy)
 
     return area, latency, energy
-
-
-
-# interconnect_estimation(quantization_bit, bus_width, netname, xbar_size, chiplet_size, num_chiplets, type, scale)

@@ -4,16 +4,6 @@ import math
 import os
 import shutil
 
-#Take all below parameters as argument
-#quantization_bit = 8
-#bus_width = 32
-#netname = 'VGG-19_45.3M'
-#xbar_size = 256
-#chiplet_size = 9
-#num_chiplets = 144
-#type = 'Homogeneous Design'
-#scale = 100
-
 def generate_traces_noc(config, num_pes_each_layer, num_in_eachLayer, chiplet_layers, dest_layers,  layer_location_begin_chiplet, netname, chiplet_size, num_chiplets, type, scale):
 
     # print("dest_layers:",dest_layers)
