@@ -1,8 +1,8 @@
-# Project Title
+# 3D-CIMlet
 
 3D-CIMlet: A Chiplet Co-Design Framework for Heterogeneous In-Memory Acceleration of Edge LLM Inference and Continual Learning
 
----
+<!-- ---
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@
 5. [Configuration](#configuration)
 6. [Examples](#examples)
 7. [Contributing](#contributing)
-8. [License](#license)
+8. [License](#license) -->
 
 ---
 
@@ -25,9 +25,9 @@ The design space for edge AI hardware supporting large language model (LLM) infe
 
 ## Features
 
-- Feature 1: Brief description
-- Feature 2: Brief description
-- Feature 3: Brief description
+- Feature 1: We develop 3D-CIMlet, a modeling and co-design framework that allows rapid design space exploration of 2.5D/3D chiplet-based accelerator architectures for transformers, leveraging heterogeneous memory technologies.
+- Feature 2: Based upon 3D-CIMlet, we develop a heterogeneous RRAM/eDRAM CIM system with 2.5D and 3D integration schemes and corresponding reliability-aware mapping strategies to support efficient inference and continual learning of edge LLMs.
+- Feature 3: Through chiplet-to-package, multi-scale design space explorations (DSE), we provide co-optimization guidelines spanning CIM chiplet designs (intra-chiplet and inter-chiplet), cost-aware and thermal-aware system integration, and runtime optimizations for continual learning.
 
 ---
 
@@ -35,12 +35,14 @@ The design space for edge AI hardware supporting large language model (LLM) infe
 
 ### Prerequisites
 
-- [Dependency 1](https://example.com) (e.g., Python 3.8+)
-- [Dependency 2](https://example.com) (e.g., Node.js)
+- Python 3.8+
 
 ### Steps
 
-1. Clone the repository:
+1. Get the framework from GitHub:
    ```bash
-   git clone https://github.com/username/repository.git
-   cd repository
+   git clone https://anonymous.4open.science/r/3D-CIMlet
+2. Go to the 3D-CIMlet folder, check the configuration in config.py and run main.py:
+   ```bash
+   cd 3D-CIMlet
+   python3 main.py

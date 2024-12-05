@@ -20,25 +20,35 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
     print('Trace generation for NoC is finished')
     print('Starting to simulate the NoC trace')
 
+    # Get the project root directory /3D-CIMlet 
+    base_dir = os.path.dirname(os.getcwd())
 
-    trace_directory_name = str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/'
-    trace_directory_full_path = '/home/du335/3D-CIMlet/Interconnect/' + netname + '_NoC_traces' + '/' + trace_directory_name
-    
+    # current directory
+    interconnect_dir = os.getcwd()  # /3D-CIMlet/Interconnect
+
+    results_dir = os.path.join(base_dir, 'Final_Results')
+
+        
+    # Build the directory path
+    trace_directory_name = f'{type}_{num_chiplets}_chiplet_size_{chiplet_size}_scale_{scale}/'
+    trace_directory_full_path = os.path.join(interconnect_dir, f'{netname}_NoC_traces', trace_directory_name)
+
     results_directory_name = trace_directory_name
-    results_directory_full_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + results_directory_name
-                
-    run_booksim_noc(config,trace_directory_full_path,num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,chiplet_static_type)
-    if (not os.path.exists(results_directory_full_path)):
+    results_directory_full_path = os.path.join(results_dir, f'NoC_Results_{netname}', results_directory_name)
+
+    run_booksim_noc(config, trace_directory_full_path, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type)
+
+    if not os.path.exists(results_directory_full_path):
         os.makedirs(results_directory_full_path)
-    
-    os.system('rm -rf ' + results_directory_full_path + '/logs')
-    os.system('mv /home/du335/3D-CIMlet/Interconnect/logs/ ' + results_directory_full_path)
+
+    os.system(f'rm -rf {os.path.join(results_directory_full_path, "logs")}')
+    os.system(f'mv {os.path.join(interconnect_dir, "logs")} {results_directory_full_path}')
 
     print('finish simulate the NoC trace')
 
     # return area
     area = 0.0
-    noc_area_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Area_chiplet.csv'
+    noc_area_file_path = os.path.join(results_directory_full_path, 'logs', 'Area_chiplet.csv')
 
     with open(noc_area_file_path, 'r') as file:
         for line in file:
@@ -57,7 +67,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
 
     # return latency
     latency_list = []
-    noc_latency_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Latency_chiplet.csv'
+    noc_latency_file_path = os.path.join(results_directory_full_path, 'logs', 'Latency_chiplet.csv')
 
     with open(noc_latency_file_path, 'r') as file:
         for line in file:
@@ -77,7 +87,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
 
     # return energy
     power_list = []
-    noc_power_file_path = '/home/du335/3D-CIMlet/Final_Results/NoC_Results_' + netname + '/' + str(type) + '_' + str(num_chiplets) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '/logs/Energy_chiplet.csv'
+    noc_power_file_path = os.path.join(results_directory_full_path, 'logs', 'Energy_chiplet.csv')
 
     with open(noc_power_file_path, 'r') as file:
         for line in file:
@@ -98,5 +108,7 @@ def interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used
     energy = sum(l * p for l, p in zip(latency_list, power_list))
 
     print("Total energy from booksim noc_energy_file_path:", energy)
+    
+    os.chdir("..") # back to /3D-CIMlet from /3D-CIMlet/Interconnect
 
     return area, latency, energy

@@ -5,34 +5,23 @@ import os
 import shutil
 
 def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet,num_chiplet_eachLayer, dest_layers, layer_location_begin_chiplet, num_in_eachLayer, bus_width, netname, chiplet_size, type, scale):
-
-    # directory_name = netname + '/' + type + '/' + str(num_chiplets) + '_Chiplets_' + str(chiplet_size) + '_Pes/to_interconnect'
-    # directory_name = '/home/du335/simulator/to_interconnect'
-    # tiles_csv_file_name = directory_name + '/num_tiles_per_layer_chiplet.csv'
-    # num_tiles_each_layer = pd.read_csv(tiles_csv_file_name, header=None)
-    # num_tiles_each_layer = num_tiles_each_layer.to_numpy()
-    # num_tiles_each_layer = num_tiles_each_layer[:, 2]
-    
-    # activation_csv_file_name = directory_name + '/ip_activation.csv'
-    # num_activations_per_layer = pd.read_csv(activation_csv_file_name, header=None)
-    # num_activations_per_layer = num_activations_per_layer.to_numpy()
-    
-    # chiplet_breakup_file_name = directory_name + '/chiplet_breakup.csv'
-    # data = pd.read_csv(chiplet_breakup_file_name, header=None)
-    # data = data.to_numpy()
     
     num_bits_nop_eachLayer = [[0 for _ in range(len(dest_layers))] for _ in range(len(dest_layers))]
 
     num_chiplets_used = num_used_static_chiplet_all_layers + num_used_dynamic_chiplet
     nop_mesh_size = math.ceil(math.sqrt(num_chiplets_used))
     
-    dir_name = '/home/du335/3D-CIMlet/Interconnect/' +  netname + '_NoP_traces' + '/' + type + '_' + str(num_chiplets_used) + '_chiplet_size_' + str(chiplet_size) + '_scale_' + str(scale) + '_bus_width_' + str(bus_width)
-            
+    dir_name = os.path.join(
+    'Interconnect', 
+    f'{netname}_NoP_traces',
+    f'{type}_{num_chiplets_used}_chiplet_size_{chiplet_size}_scale_{scale}_bus_width_{bus_width}'
+    )
+    print("CHECK:",dir_name)        
     if (os.path.isdir(dir_name)):
         shutil.rmtree(dir_name)
     
-    os.makedirs(dir_name)
-    # os.chdir(dir_name);
+    os.makedirs(dir_name, exist_ok=True)
+    os.chdir(dir_name)
     
     # loop: src_layer, find if the dest_layers of each src_layer need NoP
     for layer_idx in range(len(num_chiplet_eachLayer)):
@@ -97,11 +86,8 @@ def generate_traces_nop(config, num_used_static_chiplet_all_layers, num_used_dyn
                 filename = 'trace_file_srcL_' + str(layer_idx) +'_destL_' + str(dest_layer) + '.txt'
                 
                 trace = np.delete(trace, 0, 0)
-                os.chdir(dir_name)
                 np.savetxt(filename, trace, fmt='%i')
-                os.chdir("../..")
-    
-    os.chdir(dir_name)
+
     np.savetxt('nop_mesh_size.csv', [nop_mesh_size], fmt='%i')
     os.chdir("../..")
     

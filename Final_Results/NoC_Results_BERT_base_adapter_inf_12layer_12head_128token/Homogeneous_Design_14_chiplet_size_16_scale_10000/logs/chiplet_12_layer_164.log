@@ -1,6 +1,6 @@
 ----------------------------------------------------------
 Initialized.
-BEGIN Configuration File: /home/du335/simulator/Interconnect/logs/configs/chiplet_12_mesh_config
+BEGIN Configuration File: /home/du335/3D-CIMlet/Interconnect/logs/configs/chiplet_12_mesh_config
 // $Id$
 
 // Copyright (c) 2007-2015, Trustees of The Leland Stanford Junior University
@@ -87,7 +87,7 @@ channel_width = 32;
 //watch_file = watch_file.txt;
 //watch_out = watch_out.txt;
 
-END Configuration File: /home/du335/simulator/Interconnect/logs/configs/chiplet_12_mesh_config
+END Configuration File: /home/du335/3D-CIMlet/Interconnect/logs/configs/chiplet_12_mesh_config
 Trace is finished in 0 cycles
 Class 0:
 Packet latency average = -nan

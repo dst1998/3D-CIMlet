@@ -102,7 +102,7 @@ def main(config):
     # print("dest_layers:",dest_layers)
     # print("to_bp_dest_layers:",to_bp_dest_layers)
     
-    static_chiplet_layers, static_chiplet_availability, num_used_static_chiplet_all_layers,num_used_static_chiplet,num_used_semi_static_chiplet,chiplet_static_type,layer_location_begin_chiplet = get_static_chiplet_layers(config,NetStructure,NetStructure_layer_def,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer)
+    static_chiplet_layers, static_chiplet_availability_ratio, num_used_static_chiplet_all_layers,num_used_static_chiplet,num_used_semi_static_chiplet,chiplet_static_type,layer_location_begin_chiplet = get_static_chiplet_layers(config,NetStructure,NetStructure_layer_def,Num_StaticPE_eachLayer,num_static_chiplet_eachLayer)
 
     # get Num of input Activation each Layer
     Num_In_eachLayer = []
@@ -149,6 +149,7 @@ def main(config):
         
         noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
         if "inf" not in config.net_name:
+            print("STARTING SIMULATE NOC TRAINING:")
             noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
         # NoP Estimation
@@ -165,10 +166,10 @@ def main(config):
                     total_exclude_static_dynamic_nop_cycles += nop_latencyCycle_eachLayer[src_layer][dest_layer]
         total_exclude_static_dynamic_nop_latency = total_exclude_static_dynamic_nop_cycles / config.nop_clk_freq_2d
         total_exclude_static_dynamic_nop_energy = total_exclude_static_dynamic_nop_latency / nop_latency * nop_energy
-        print("# nop_latency:",nop_latency)
-        print("# nop_energy:",nop_energy)
-        print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
-        print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
+        # print("# nop_latency:",nop_latency)
+        # print("# nop_energy:",nop_energy)
+        # print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
+        # print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
         
         nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
@@ -186,10 +187,10 @@ def main(config):
                         total_exclude_static_dynamic_nop_train_cycles += nop_latencyCycle_train_eachLayer[src_layer][dest_layer]
             total_exclude_static_dynamic_nop_train_latency = total_exclude_static_dynamic_nop_train_cycles / config.nop_clk_freq_2d
             total_exclude_static_dynamic_nop_train_energy = total_exclude_static_dynamic_nop_train_latency / nop_train_latency * nop_train_energy
-            print("# nop_train_latency:",nop_train_latency)
-            print("# nop_train_energy:",nop_train_energy)
-            print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
-            print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
+            # print("# nop_train_latency:",nop_train_latency)
+            # print("# nop_train_energy:",nop_train_energy)
+            # print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
+            # print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
 
         nop_driver_area, nop_driver_energy = 0,0
         
@@ -221,10 +222,10 @@ def main(config):
         noc_area, noc_latency, noc_energy = 0,0,0
         noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
         
-        # noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
-        # if "inf" not in config.net_name:
-        #     noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        if "inf" not in config.net_name:
+            noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         
         # NoP Estimation
         nop_area, nop_latency, nop_energy= 0,0,0
@@ -246,32 +247,32 @@ def main(config):
                     total_exclude_static_dynamic_nop_cycles += nop_latencyCycle_eachLayer[src_layer][dest_layer]
         total_exclude_static_dynamic_nop_latency = total_exclude_static_dynamic_nop_cycles / nop_clk_freq
         total_exclude_static_dynamic_nop_energy = total_exclude_static_dynamic_nop_latency / nop_latency * nop_energy
-        print("# nop_latency:",nop_latency)
-        print("# nop_energy:",nop_energy)
-        print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
-        print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
+        # print("# nop_latency:",nop_latency)
+        # print("# nop_energy:",nop_energy)
+        # print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
+        # print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
         
         nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
         nop_num_bits_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
         nop_latencyCycle_train_eachLayer = [[0] * len(NetStructure) for _ in range(len(NetStructure))]
-        # if "inf" not in config.net_name:
-        #     nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
+        if "inf" not in config.net_name:
+            nop_train_area, nop_train_latency, nop_train_energy, nop_num_bits_train_eachLayer,nop_latencyCycle_train_eachLayer = nop_interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, num_chiplet_eachLayer, to_bp_dest_layers, layer_location_begin_chiplet, num_to_bp_transfer_byte_to_layer, config.net_name, config.static_chiplet_size,nop_clk_freq)
             
-        #     # print("# nop_train_latency:",nop_train_latency)
-        #     # print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles","cycles")
+            # print("# nop_train_latency:",nop_train_latency)
+            # print("# nop_latencyCycle_train_eachLayer sum:",sum(sum(row) for row in nop_latencyCycle_train_eachLayer), "cycles","cycles")
         
-        #     # get static_dynamic_chip-to-chip_nop_cycles and latency when rram+edram on same chip 
-        #     total_exclude_static_dynamic_nop_train_cycles = 0
-        #     for src_layer in range(len(nop_latencyCycle_train_eachLayer)):
-        #         for dest_layer in range(len(nop_latencyCycle_train_eachLayer)):
-        #             if (NetStructure[src_layer][6] == 1 and NetStructure[dest_layer][6] != 1) or (NetStructure[src_layer][6] != 1 and NetStructure[dest_layer][6] == 1):
-        #                 total_exclude_static_dynamic_nop_train_cycles += nop_latencyCycle_train_eachLayer[src_layer][dest_layer]
-        #     total_exclude_static_dynamic_nop_train_latency = total_exclude_static_dynamic_nop_train_cycles / nop_clk_freq
-        #     total_exclude_static_dynamic_nop_train_energy = total_exclude_static_dynamic_nop_train_latency / nop_train_latency * nop_train_energy
-        #     print("# nop_train_latency:",nop_train_latency)
-        #     print("# nop_train_energy:",nop_train_energy)
-        #     print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
-        #     print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
+            # get static_dynamic_chip-to-chip_nop_cycles and latency when rram+edram on same chip 
+            total_exclude_static_dynamic_nop_train_cycles = 0
+            for src_layer in range(len(nop_latencyCycle_train_eachLayer)):
+                for dest_layer in range(len(nop_latencyCycle_train_eachLayer)):
+                    if (NetStructure[src_layer][6] == 1 and NetStructure[dest_layer][6] != 1) or (NetStructure[src_layer][6] != 1 and NetStructure[dest_layer][6] == 1):
+                        total_exclude_static_dynamic_nop_train_cycles += nop_latencyCycle_train_eachLayer[src_layer][dest_layer]
+            total_exclude_static_dynamic_nop_train_latency = total_exclude_static_dynamic_nop_train_cycles / nop_clk_freq
+            total_exclude_static_dynamic_nop_train_energy = total_exclude_static_dynamic_nop_train_latency / nop_train_latency * nop_train_energy
+            # print("# nop_train_latency:",nop_train_latency)
+            # print("# nop_train_energy:",nop_train_energy)
+            # print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
+            # print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
 
         nop_driver_area, nop_driver_energy = 0,0
         # NoP Hardware Cost (Nop_area:m2, NoP_energy:J)
@@ -318,12 +319,12 @@ def main(config):
         noc_area, noc_latency, noc_energy = 0,0,0
         noc_train_area, noc_train_latency, noc_train_energy = 0,0,0
 
-        # noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+        noc_area, noc_latency, noc_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, Num_In_eachLayer, static_chiplet_layers, dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
         noc_area /= num_used_chiplets
         
-        # if "inf" not in config.net_name:
-        #     noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
-        #     noc_train_area /= num_used_chiplets
+        if "inf" not in config.net_name:
+            noc_train_area, noc_train_latency, noc_train_energy = interconnect_estimation(config, num_used_static_chiplet_all_layers, num_used_dynamic_chiplet, chiplet_static_type, Num_StaticPE_eachLayer, num_to_bp_transfer_byte_to_layer, static_chiplet_layers, to_bp_dest_layers, layer_location_begin_chiplet, config.net_name, config.static_chiplet_size)
+            noc_train_area /= num_used_chiplets
         
         # NoP Estimation
         nop_area, nop_latency, nop_energy = 0,0,0
@@ -387,10 +388,10 @@ def main(config):
                     total_exclude_static_dynamic_nop_cycles += num_cycle_src_chip_to_dest_chip_for_latency[src_chip_idx][dest_chip_idx]
         total_exclude_static_dynamic_nop_latency = total_exclude_static_dynamic_nop_cycles / nop_clk_freq
         total_exclude_static_dynamic_nop_energy = total_exclude_static_dynamic_nop_bits * ebit
-        print("# nop_latency:",nop_latency)
-        print("# nop_energy:",nop_energy)
-        print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
-        print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
+        # print("# nop_latency:",nop_latency)
+        # print("# nop_energy:",nop_energy)
+        # print("# total_exclude_static_dynamic_nop_latency:",total_exclude_static_dynamic_nop_latency, "s")
+        # print("# total_exclude_static_dynamic_nop_energy:",total_exclude_static_dynamic_nop_energy, "J")
         #=============================================
         
         nop_train_area, nop_train_latency, nop_train_energy= 0,0,0
@@ -430,10 +431,10 @@ def main(config):
                         total_exclude_static_dynamic_nop_train_cycles += num_train_cycle_src_chip_to_dest_chip_for_latency[src_chip_idx][dest_chip_idx]
             total_exclude_static_dynamic_nop_train_latency = total_exclude_static_dynamic_nop_train_cycles / nop_clk_freq
             total_exclude_static_dynamic_nop_train_energy = total_exclude_static_dynamic_nop_train_bits * ebit
-            print("# nop_train_latency:",nop_train_latency)
-            print("# nop_train_energy:",nop_train_energy)
-            print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
-            print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
+            # print("# nop_train_latency:",nop_train_latency)
+            # print("# nop_train_energy:",nop_train_energy)
+            # print("# total_exclude_static_dynamic_nop_train_latency:",total_exclude_static_dynamic_nop_train_latency, "s")
+            # print("# total_exclude_static_dynamic_nop_train_energy:",total_exclude_static_dynamic_nop_train_energy, "J")
             #=============================================
         
         n_bits_all_chiplets = sum(sum(row) for row in nop_num_bits_eachLayer)
@@ -453,7 +454,7 @@ def main(config):
         # nop_driver_area, nop_driver_energy = NoP_hardware_estimation(ebit, area_per_lane, clocking_area, n_lane, num_used_chiplets, n_bits_all_chiplets)
 
     # utilization and PPA
-    static_chiplet_utilization = [(1- x/static_chiplet_size) for x in static_chiplet_availability]
+    static_chiplet_utilization = [(1- x) for x in static_chiplet_availability_ratio]
     dynamic_chiplet_utilization = [x / (dynamic_chiplet_size * num_used_dynamic_chiplet) for x in Num_DynamicPE_eachLayer]
     
     Total_Area = 0
@@ -486,13 +487,6 @@ def main(config):
         total_latency_eachLayer[layer_idx] = write_latency_input_eachLayer[layer_idx] + read_latency_output_eachLayer[layer_idx] + refresh_latency_weight_eachLayer[layer_idx]
         # add htree latency
         total_latency_eachLayer[layer_idx] += write_latency_input_peHtree_eachLayer[layer_idx] + read_latency_output_peHtree_eachLayer[layer_idx]
-        if layer_idx == 329 or layer_idx == 360:
-            print("layer:",layer_idx)
-            print("write_latency_input:",write_latency_input_eachLayer[layer_idx])
-            print("read_latency_output:",read_latency_output_eachLayer[layer_idx])
-            print("refresh_latency_weight:",refresh_latency_weight_eachLayer[layer_idx])
-            print("write_latency_input_peHtree:",write_latency_input_peHtree_eachLayer[layer_idx])
-            print("read_latency_output_peHtree:",read_latency_output_peHtree_eachLayer[layer_idx])
 
 
 
@@ -564,9 +558,9 @@ def main(config):
     if any(keyword in config.model_filename for keyword in ("cl", "ft")):
         available_sram_buffer_size_each_static2_chip = [Integration.static2_chiplet.buffer_size] * num_used_semi_static_chiplet
         buffer = Integration.static2_chiplet.buffer
-        print("Integration.static2_chiplet.buffer_size=",Integration.static2_chiplet.buffer_size)
-        print("buffer_height=",buffer.mem_height)
-        print("buffer_width=",buffer.mem_width)
+        # print("Integration.static2_chiplet.buffer_size=",Integration.static2_chiplet.buffer_size)
+        # print("buffer_height=",buffer.mem_height)
+        # print("buffer_width=",buffer.mem_width)
         
         for layer_idx, layer in enumerate(NetStructure):
             if layer[6] == 2:
@@ -629,7 +623,7 @@ def main(config):
                     else:
                         adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] = sum(total_latency_eachLayer) - layers_process_latency_eachDestLayer[dest_layer_idx] + 2 * (config.train_batch_size - 1) * sum(total_latency_eachLayer)
                     
-                    print("adapter_weight_gradient_storage_latency_eachLayer",dest_layer_idx,":",adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx])
+                    # print("adapter_weight_gradient_storage_latency_eachLayer",dest_layer_idx,":",adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx])
                     
                     refresh_retention_time = getattr(config, f'eDRAM_refresh_retention_time_{config.dynamic_chiplet_technode}nm') # should be advanced technode
                     num_refresh_times = math.ceil(adapter_weight_gradient_storage_latency_eachLayer[dest_layer_idx] / refresh_retention_time)
@@ -638,10 +632,10 @@ def main(config):
                     
                     adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] = getattr(config, f'RRAM_write_energy_per_bit_{config.static_chiplet_technode}nm') + config.ebit_3d # can change to 2/2.5/3d
                     adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx] = adapter_weight_gradient_rram_storage_energy_eachLayer[dest_layer_idx] / adapter_weight_gradient_edram_storage_energy_eachLayer[dest_layer_idx]
-                    print("adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer",dest_layer_idx,":",adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx])
-                    print("refresh_retention_time :",refresh_retention_time)
-                    print("num_refresh_times :",num_refresh_times)
-                    print("refresh_power_per_bit :",refresh_power_per_bit)
+                    # print("adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer",dest_layer_idx,":",adapter_weight_gradient_rram_edram_storage_energy_ratio_eachLayer[dest_layer_idx])
+                    # print("refresh_retention_time :",refresh_retention_time)
+                    # print("num_refresh_times :",num_refresh_times)
+                    # print("refresh_power_per_bit :",refresh_power_per_bit)
     # =============== analysis done: adapter-layer weight gradient storage location =============== #
     
     # get total power each layer and total power each layer per PE
@@ -699,7 +693,7 @@ def main(config):
     # update max dynamic chip power to dynamic chip power (consider as worst case)
     for chip_idx in range(num_used_static_chiplet_all_layers,num_used_chiplets):
         chip_power_mW_eachChip[chip_idx] = max_chip_power_mW_eachChip[chip_idx]
-    print("chip_power_mW_eachChip (mW) : ", chip_power_mW_eachChip)
+    # print("chip_power_mW_eachChip (mW) : ", chip_power_mW_eachChip)
     
     chip_power_mW_per_area_mm2_eachChip = [0] * num_used_chiplets
     area_eachChip = [0] * num_used_chiplets
@@ -712,14 +706,14 @@ def main(config):
             area_eachChip[chip_idx] = Integration.dynamic_chiplet.get_area() * 1E6
         chip_power_mW_per_area_mm2_eachChip[chip_idx] = chip_power_mW_eachChip[chip_idx] / area_eachChip[chip_idx]
 
-    print("chip_power_mW_per_area_mm2_eachChip (mW/mm2) : ")
-    print("static 0 chip : ")
-    print(chip_power_mW_per_area_mm2_eachChip[0:num_used_static_chiplet])
-    print("static 2 chip : ")
-    print(chip_power_mW_per_area_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
-    print("dynamic chip : ")
-    print(chip_power_mW_per_area_mm2_eachChip[num_used_static_chiplet_all_layers:num_used_chiplets])
-    print("")
+    # print("chip_power_mW_per_area_mm2_eachChip (mW/mm2) : ")
+    # print("static 0 chip : ")
+    # print(chip_power_mW_per_area_mm2_eachChip[0:num_used_static_chiplet])
+    # print("static 2 chip : ")
+    # print(chip_power_mW_per_area_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
+    # print("dynamic chip : ")
+    # print(chip_power_mW_per_area_mm2_eachChip[num_used_static_chiplet_all_layers:num_used_chiplets])
+    # print("")
 
     # ===== get TOPS/W/mm2 mW per chip and TOPS/mm2 per chip =====
     tops_per_w_per_mm2_eachChip = [0] * num_used_chiplets
@@ -774,18 +768,18 @@ def main(config):
 
         tops_per_mm2_eachChip[chip_idx] = (tops_per_mm2_eachChip[chip_idx]*area_eachChip[chip_idx] + tops_per_mm2_eachChip[num_used_static_chiplet_all_layers]*area_eachChip[num_used_static_chiplet_all_layers]) / (area_eachChip[chip_idx] + area_eachChip[num_used_static_chiplet_all_layers])
 
-    print("tops_per_mm2_eachChip (TOPS/mm2) : ")
-    print("static 0 chip : ")
-    print(tops_per_mm2_eachChip[0:num_used_static_chiplet])
-    print("static 2 chip : ")
-    print(tops_per_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
-    print("")
-    print("tops_per_w_per_mm2_eachChip (TOPS/W/mm2) : ")
-    print("static 0 chip : ")
-    print(tops_per_w_per_mm2_eachChip[0:num_used_static_chiplet])
-    print("static 2 chip : ")
-    print(tops_per_w_per_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
-    print("")
+    # print("tops_per_mm2_eachChip (TOPS/mm2) : ")
+    # print("static 0 chip : ")
+    # print(tops_per_mm2_eachChip[0:num_used_static_chiplet])
+    # print("static 2 chip : ")
+    # print(tops_per_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
+    # print("")
+    # print("tops_per_w_per_mm2_eachChip (TOPS/W/mm2) : ")
+    # print("static 0 chip : ")
+    # print(tops_per_w_per_mm2_eachChip[0:num_used_static_chiplet])
+    # print("static 2 chip : ")
+    # print(tops_per_w_per_mm2_eachChip[num_used_static_chiplet:num_used_static_chiplet_all_layers])
+    # print("")
 
     # print("dynamic chip : ")
     # print(tops_per_mm2_eachChip[num_used_static_chiplet_all_layers:num_used_chiplets])
@@ -962,9 +956,9 @@ def main(config):
     # print("total_refresh_energy_weight:",total_refresh_energy_weight)
     # print("")
     # # -----htree breakdown
-    print("total_write_latency_input_peHtree:",total_write_latency_input_peHtree)
-    print("total_write_latency_weight_peHtree:",total_write_latency_weight_peHtree)
-    print("total_read_latency_output_peHtree:",total_read_latency_output_peHtree)
+    # print("total_write_latency_input_peHtree:",total_write_latency_input_peHtree)
+    # print("total_write_latency_weight_peHtree:",total_write_latency_weight_peHtree)
+    # print("total_read_latency_output_peHtree:",total_read_latency_output_peHtree)
 
     # print("total_write_energy_input_peHtree:",total_write_energy_input_peHtree)
     # print("total_write_energy_weight_peHtree:",total_write_energy_weight_peHtree)

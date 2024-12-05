@@ -1,6 +1,6 @@
 ----------------------------------------------------------
 Initialized.
-BEGIN Configuration File: /home/du335/simulator/Interconnect/logs/configs/chiplet_12_mesh_config
+BEGIN Configuration File: /home/du335/3D-CIMlet/Interconnect/logs/configs/chiplet_12_mesh_config
 // $Id$
 
 // Copyright (c) 2007-2015, Trustees of The Leland Stanford Junior University
@@ -87,7 +87,7 @@ channel_width = 32;
 //watch_file = watch_file.txt;
 //watch_out = watch_out.txt;
 
-END Configuration File: /home/du335/simulator/Interconnect/logs/configs/chiplet_12_mesh_config
+END Configuration File: /home/du335/3D-CIMlet/Interconnect/logs/configs/chiplet_12_mesh_config
 Trace is finished in 14 cycles
 Class 0:
 Packet latency average = 12
@@ -123,7 +123,7 @@ latency change    = 1
 throughput change = 1
 Too many sample periods needed to converge
 Simulation unstable, ending ...
-Total run time 0.011806
+Total run time 0.0125
 L = 2.23607 K = 9.1 M = 2 N = 1
 -----------------------------------------
 - OCN Power Summary

@@ -2,7 +2,7 @@ import pandas as pd
 import re
 
 # read original inference file path
-file_path = '/home/du335/3D-CIMlet/BERT_base_inf_12layer_12head_128token.csv' 
+file_path = 'BERT_base_inf_12layer_12head_128token.csv' 
 df = pd.read_csv(file_path, header=None)
 
 # Use regex to extract the part before "_<number>layer"
@@ -42,9 +42,9 @@ for i in range(len(df)):
         new_row_2 = [row[5],row[4],row[0],row[1],row[3],row[2],2,0,"W Gradient:weight_ff1,"]
         new_data.append(new_row_1)
         new_data.append(new_row_2)
-    elif (row[8] == "head contact,"):
-        new_row_1 = [row[4],row[5],row[3],row[2],row[0],row[1],2,0,"BP:weight_headContact,"]
-        new_row_2 = [row[5],row[4],row[0],row[1],row[3],row[2],2,0,"W Gradient:weight_headContact,"]
+    elif (row[8] == "head concat,"):
+        new_row_1 = [row[4],row[5],row[3],row[2],row[0],row[1],2,0,"BP:weight_headConcat,"]
+        new_row_2 = [row[5],row[4],row[0],row[1],row[3],row[2],2,0,"W Gradient:weight_headConcat,"]
         new_data.append(new_row_1)
         new_data.append(new_row_2)
     elif (row[8] == "KQT softmax * V,"):

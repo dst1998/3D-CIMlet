@@ -4,16 +4,13 @@ import math
 model_layer = 12
 head = 12
 # token_len = 128
-token_len = 1023 # for gpt2: 128 or 1023
-# token_len = (224//16)*(224//16) # for DeiT
+token_len = 1023 # for gpt2: 128 (for benchmarking w/ BERT) or 1023 (max length)
 dim = 768
 dim_ff = dim*4
 dim_head = math.ceil(dim/head)
-# dim_out = 2 # final classification #where did you get this for bert base, there are a lot of task and output depends on task to task
 dim_out = 50257 # final classification for gpt2
 num_onelayer_row = 3+ head*2 +3
 num_file_row = num_onelayer_row * model_layer +1 # +1: final output weight after all layers
-# model_type = 'Transformer_inf'
 model_type = 'Gpt2_inf_new'
 # Define the first line of customization
 first_row = ['model_type', model_type] + [0] * 7
@@ -31,8 +28,8 @@ for i in range(1, num_file_row+1):
         row = [1, dim_head, dim_head, token_len, 1, token_len, 1, 1,"K.Q,"]
     elif ((3 < i%num_onelayer_row < num_onelayer_row-2) and (i%2 == 1)):  # KQ softmax * V
         row = [1, token_len, token_len, dim_head, 1, dim_head, 1, 0,"KQT softmax * V,"]
-    elif (i%num_onelayer_row == num_onelayer_row-2):  # head contact
-        row = [1, dim, dim, dim, 1, dim, 0, 0,"head contact,"]
+    elif (i%num_onelayer_row == num_onelayer_row-2):  # head concat
+        row = [1, dim, dim, dim, 1, dim, 0, 0,"head concat,"]
     elif (i%num_onelayer_row == num_onelayer_row-1):  # ff1
         row = [1, dim, dim, dim_ff, 1, dim_ff, 0, 0, "ff1,"]
     elif (i%num_onelayer_row == 0 and i !=0):  # ff2
@@ -46,7 +43,7 @@ df = pd.DataFrame(data)
 df.iloc[1:, :-1] = df.iloc[1:, :-1].astype(int)
 
 # Saved as a new CSV file
-output_file_path = '/home/du335/3D-CIMlet/' + model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
+output_file_path = model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
 df.to_csv(output_file_path, index=False, header=False)
 
 print(f"New file generated: {output_file_path}")

@@ -101,7 +101,7 @@ Cw_cpl  = {Cw_cpl};//float
 wire_length  = {wire_length};//float
 """
 
-techfile_path = '/home/du335/3D-CIMlet/Interconnect/techfile_' + str(technode) + 'nm.txt'
+techfile_path = 'Interconnect/techfile_' + str(technode) + 'nm.txt'
 with open(techfile_path, 'w') as file:
     file.write(content)
 

@@ -9,7 +9,7 @@ dim_ff = dim*4
 dim_head = math.ceil(dim/head)
 dim_out = 2 # final classification
 num_onelayer_row = 3+ head*2 +3
-num_file_row = (3+ head*2 +3) * model_layer +1 # +1: final output weight after all layers
+num_file_row = num_onelayer_row * model_layer +1 # +1: final output weight after all layers
 model_type = 'BERT_base_inf'
 # Define the first line of customization
 first_row = ['model_type', model_type] + [0] * 7
@@ -24,8 +24,8 @@ for i in range(1, num_file_row+1):
         row = [token_len, dim_head, dim_head, token_len, token_len, token_len, 1, 1,"K.Q,"]
     elif ((3 < i%num_onelayer_row < num_onelayer_row-2) and (i%2 == 1)):  # KQ softmax * V
         row = [token_len, token_len, token_len, dim_head, token_len, dim_head, 1, 0,"KQT softmax * V,"]
-    elif (i%num_onelayer_row == num_onelayer_row-2):  # head contact
-        row = [token_len, dim, dim, dim, token_len, dim, 0, 0,"head contact,"]
+    elif (i%num_onelayer_row == num_onelayer_row-2):  # head concat
+        row = [token_len, dim, dim, dim, token_len, dim, 0, 0,"head concat,"]
     elif (i%num_onelayer_row == num_onelayer_row-1):  # ff1
         row = [token_len, dim, dim, dim_ff, token_len, dim_ff, 0, 0, "ff1,"]
     elif (i%num_onelayer_row == 0 and i !=0):  # ff2
@@ -39,7 +39,7 @@ df = pd.DataFrame(data)
 df.iloc[1:, :-1] = df.iloc[1:, :-1].astype(int)
 
 # Saved as a new CSV file
-output_file_path = '/home/du335/3D-CIMlet/' + model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
+output_file_path = model_type + '_' + str(model_layer) + 'layer' + '_' + str(head) + 'head' + '_' + str(token_len) + 'token' + '.csv'
 df.to_csv(output_file_path, index=False, header=False)
 
 print(f"New file generated: {output_file_path}")

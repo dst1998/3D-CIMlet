@@ -82,27 +82,6 @@ class Config:
 		self.eDRAM_refresh_power_per_bit_130nm = 1.13E-03
 		self.eDRAM_refresh_retention_time_130nm = 4.00E-05
 
-		# self.eDRAM_cell_size_28nm = 0.002769 * 1e-6 / (0.008e06)
-		# self.eDRAM_read_energy_per_bit_28nm = 7.2e-12 * (1/3) * 0.155e-03 * (200/66) # refresh: 7.2e-12W/b, 66MHz (scale to 200MHz),retention time=0.155ms
-		# self.eDRAM_write_energy_per_bit_28nm = 7.2e-12 * (2/3)* 0.155e-03 * (200/66) # refresh: 7.2e-12W/b, 66MHz (scale to 200MHz),retention time=0.155ms
-		# self.eDRAM_refresh_power_per_bit_28nm = 0
-
-		# # self.eDRAM_cell_size_40nm = 1.35e05 * 1e-12 / (256*128)
-		# self.eDRAM_cell_size_40nm = 57564 * 1E-12 / (256*128)
-		# self.eDRAM_read_energy_per_bit_40nm = 0.04e-12
-		# self.eDRAM_write_energy_per_bit_40nm = 0.1e-12
-		# self.eDRAM_refresh_power_40nm = 0
-
-		# self.eDRAM_cell_size_65nm = 0.047096688 * 1e-6 / (0.024e06)
-		# self.eDRAM_read_energy_per_bit_65nm = 3.54e-03/(0.024*1024*1024) * (1/3) * 0.04e-03 # refresh: 3.54mW/0.024Mb, 200MHz,retention time=0.04ms
-		# self.eDRAM_write_energy_per_bit_65nm = 3.54e-03/(0.024*1024*1024) * (2/3) * 0.04e-03 # refresh: 3.54mW/0.024Mb, 200MHz,retention time=0.04ms
-		# self.eDRAM_refresh_power_per_bit_65nm = 0
-
-		# self.eDRAM_cell_size_130nm = 0.268 * 1e-6 / (0.064e06)
-		# self.eDRAM_read_energy_per_bit_130nm = 4.9e-03/(0.064*1024*1024) * (1/3) * 0.95e-03 # refresh: 4.9mW/0.064Mb, 200MHz,retention time=0.95ms
-		# self.eDRAM_write_energy_per_bit_130nm = 4.9e-03/(0.064*1024*1024) * (2/3) * 0.95e-03 # refresh: 4.9mW/0.064Mb, 200MHz,retention time=0.95ms
-		# self.eDRAM_refresh_power_per_bit_130nm = 0
-
 		# RRAM calibrated data, cell size include peripheral
 		self.RRAM_cell_size_40nm = 6.34e04 * 1e-12 / (256*256) # Luqi
 		self.RRAM_read_energy_per_bit_40nm = 0.14e-12 # Luqi
@@ -175,7 +154,7 @@ class Config:
 		self.pe_bus_width_2D = 256 # SIAM: 32
 		self.chiplet_bus_width_2D = 32 # SIAM: 8,16,32
 		self.scale_noc = 10000 # SIAM: 100
-		self.scale_nop = 100 # SIAM: 10
+		self.scale_nop = 1000 # SIAM: 10
 		self.type = 'Homogeneous_Design'
 		
 		# from Neurosim:

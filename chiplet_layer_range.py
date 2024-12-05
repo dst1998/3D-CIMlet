@@ -272,8 +272,6 @@ def get_static_chiplet_layers(config,net_structure,net_structure_layer_def,Num_S
                 if last_chiplet_used != 0:
                     chiplet_index = last_chiplet_used + 1 # the layer need more than 1 chiplet, then start with a new chiplet
                 
-                # for i in range(num_static_chiplet_this_layer):
-                #     chiplet_availability[chiplet_index + i] -= pe_used_per_chiplet
                 for i in range(num_static_chiplet_this_layer):
                     if chiplet_index + i < len(chiplet_availability):
                         chiplet_availability[chiplet_index + i] = config.static2_chiplet_height * config.static2_chiplet_width # update chip size for static 2 chip
@@ -337,7 +335,6 @@ def get_static_chiplet_layers(config,net_structure,net_structure_layer_def,Num_S
                 break
             if num_used_chiplet != (last_chiplet_used + 1):
                 num_used_chiplet = (last_chiplet_used + 1)
-    # print("num_used_static_chiplet:", num_used_chiplet)
 
     # discard unused chiplets (which are filled with -1)
     chiplet_layers = chiplet_layers[0:num_used_chiplet]
@@ -378,8 +375,13 @@ def get_static_chiplet_layers(config,net_structure,net_structure_layer_def,Num_S
         if layer_location_begin_chiplet[i] == -1:
             layer_location_begin_chiplet[i] = num_used_chiplet  # update the begin chiplet idx of ith layer
     print("layer_location_begin_chiplet:",layer_location_begin_chiplet)
+
+    chiplet_availability = np.array(chiplet_availability[:num_used_chiplet])
+    chiplet_availability_ratio = np.zeros(num_used_chiplet)
+    chiplet_availability_ratio[:num_used_static_chiplet] = chiplet_availability[:num_used_static_chiplet] / (config.static_chiplet_height * config.static_chiplet_width)
+    chiplet_availability_ratio[num_used_static_chiplet:num_used_chiplet] = chiplet_availability[num_used_static_chiplet:num_used_chiplet] / (config.static2_chiplet_height * config.static2_chiplet_width)
     
-    return chiplet_layers, chiplet_availability, num_used_chiplet,num_used_static_chiplet,num_used_semi_static_chiplet,chiplet_static_type,layer_location_begin_chiplet
+    return chiplet_layers, chiplet_availability_ratio, num_used_chiplet, num_used_static_chiplet, num_used_semi_static_chiplet, chiplet_static_type, layer_location_begin_chiplet
 
 def get_dest_layers(config,net_structure,netStructure_layer_def):
     num_T_head = config.num_T_head
@@ -413,7 +415,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 # print("case4:")
                 # print("layer:",layer)
                 dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-3)
-            # head contact, ff1
+            # head concat, ff1
             if (layer % num_layers_per_T_layer == num_layers_per_T_layer-3) or (layer % num_layers_per_T_layer == num_layers_per_T_layer-2):
                 # print("case5:")
                 # print("layer:",layer)
@@ -429,7 +431,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
     
     # if any(keyword in config.model_filename for keyword in ("Gpt2_inf")):
     if config.model_filename.startswith("Gpt2_inf"):
-        num_layers_per_T_layer = 3+ num_T_head*2 +2 # no head contact layer
+        num_layers_per_T_layer = 3+ num_T_head*2 +2 # no head concat layer
         dest_layers = [[] for _ in range(len(net_structure))]
         to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
         num_to_bp_transfer_byte_to_layer = [0 for _ in range(len(net_structure))] # only init, not used in adapter_inf
@@ -478,7 +480,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
     
     # if any(keyword in config.model_filename for keyword in ("Gpt2_inf")):
     if config.model_filename.startswith("Gpt2_inf_new"):
-        num_layers_per_T_layer = 3+ num_T_head*2 +3 # w/ head contact layer
+        num_layers_per_T_layer = 3+ num_T_head*2 +3 # w/ head concat layer
         dest_layers = [[] for _ in range(len(net_structure))]
         to_bp_dest_layers = [[] for _ in range(len(net_structure))] # only init, not used in adapter_inf
         num_to_bp_transfer_byte_to_layer = [0 for _ in range(len(net_structure))] # only init, not used in adapter_inf
@@ -559,7 +561,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 # print("case4:")
                 # print("layer:",layer)
                 dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-3)
-            # head contact, ff1
+            # head concat, ff1
             if ((layer-1) % num_layers_per_T_layer == num_layers_per_T_layer-3) or ((layer-1) % num_layers_per_T_layer == num_layers_per_T_layer-2):
                 # print("case5:")
                 # print("layer:",layer)
@@ -603,7 +605,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 # print("case4:")
                 # print("layer:",layer)
                 dest_layers[layer].append(math.floor(layer/num_layers_per_T_layer)*num_layers_per_T_layer + num_layers_per_T_layer-7)
-            # head contact, adapter1-1,adapter1-2,ff1,ff2,adapter2-1,adapter2-2,
+            # head concat, adapter1-1,adapter1-2,ff1,ff2,adapter2-1,adapter2-2,
             if ( num_layers_per_T_layer-7 <= layer % num_layers_per_T_layer <= num_layers_per_T_layer-1):
                 # print("case5:")
                 # print("layer:",layer)
@@ -671,12 +673,12 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 # FP: K.QT * V
                 elif netStructure_layer_def[layer] == 'FP:KQT softmax * V,':
                     # to FP
-                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head contact,']
+                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head concat,']
                     out_dest_layer = min(index for index in indexes if index > layer)
-                    dest_layers[layer].append(out_dest_layer) # to: FP:head contact
+                    dest_layers[layer].append(out_dest_layer) # to: FP:head concat
                 
-                # FP: head contact
-                elif netStructure_layer_def[layer] == 'FP:head contact,':
+                # FP: head concat
+                elif netStructure_layer_def[layer] == 'FP:head concat,':
                     # to FP
                     dest_layers[layer].append(layer+1)
                     # to BP
@@ -833,7 +835,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 
                 # BP:weight_adapter1-1
                 if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_adapter1-1,']:
-                    dest_layers[layer].append(layer+1) # to: BP:weight_headContact
+                    dest_layers[layer].append(layer+1) # to: BP:weight_headConcat
                 
                 # W Gradient:weight_adapter1-1
                 indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'W Gradient:weight_adapter1-1,']
@@ -843,8 +845,8 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     out_dest_layer = fp_indexes[T_layer -1 - (indexes.index(layer))]
                     dest_layers[layer].append(out_dest_layer) # to: FP:adapter 1-1
 
-                # BP:weight_headContact
-                if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headContact,'] and layer != max([i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headContact,']):
+                # BP:weight_headConcat
+                if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headConcat,'] and layer != max([i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headConcat,']):
                     for head in range(num_T_head):
                         dest_layers[layer].append(layer+1 + head*2) # to: BP:V
                 
@@ -961,9 +963,9 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 # FP: K.QT * V
                 elif netStructure_layer_def[layer] == 'FP:KQT softmax * V,':
                     # to FP
-                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head contact,']
+                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head concat,']
                     out_dest_layer = min(index for index in indexes if index > layer)
-                    dest_layers[layer].append(out_dest_layer) # to: FP:head contact
+                    dest_layers[layer].append(out_dest_layer) # to: FP:head concat
                     # to BP
                     # for head in range(num_T_head):
                     fp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:KQT softmax * V,']
@@ -975,8 +977,8 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     to_bp_dest_layers[layer].append(bp_dest_layer) 
                     num_to_bp_transfer_byte_to_layer[bp_dest_layer] = net_structure[bp_dest_layer][2] * net_structure[bp_dest_layer][3]
                 
-                # FP: head contact
-                elif netStructure_layer_def[layer] == 'FP:head contact,':
+                # FP: head concat
+                elif netStructure_layer_def[layer] == 'FP:head concat,':
                     # to FP
                     dest_layers[layer].append(layer+1)
                     # to BP
@@ -986,7 +988,7 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     to_bp_dest_layers[layer].append(bp_dest_layer)
                     num_to_bp_transfer_byte_to_layer[bp_dest_layer] = net_structure[bp_dest_layer][2] * net_structure[bp_dest_layer][3]
                     # to BP
-                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headContact,']
+                    indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headConcat,']
                     bp_idx = T_layer - math.ceil(layer / fp_num_layers_per_T_layer)
                     bp_dest_layer = indexes[bp_idx]
                     to_bp_dest_layers[layer].append(bp_dest_layer)
@@ -1083,8 +1085,8 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                 
                 # BP:weight_ff1
                 if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_ff1,']:
-                    dest_layers[layer].append(layer+2) # to: BP:weight_headContact
-                    dest_layers[layer].append(layer+3) # to: W Gradient:weight_headContact
+                    dest_layers[layer].append(layer+2) # to: BP:weight_headConcat
+                    dest_layers[layer].append(layer+3) # to: W Gradient:weight_headConcat
                     
                 # W Gradient:weight_ff1
                 # to FP
@@ -1094,19 +1096,19 @@ def get_dest_layers(config,net_structure,netStructure_layer_def):
                     out_dest_layer = fp_indexes[T_layer -1 - (indexes.index(layer))]
                     dest_layers[layer].append(out_dest_layer) # to: FP:ff1
                 
-                # BP:weight_headContact
-                if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headContact,']:
+                # BP:weight_headConcat
+                if layer in [i for i, item in enumerate(netStructure_layer_def) if item == 'BP:weight_headConcat,']:
                     for head in range(num_T_head):
                         dest_layers[layer].append(layer+2 + head*4) # to: BP:V
                         dest_layers[layer].append(layer+3 + head*4) # to: BP:A'
                 
-                # W Gradient:weight_headContact
+                # W Gradient:weight_headConcat
                 # to FP
-                indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'W Gradient:weight_headContact,']
+                indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'W Gradient:weight_headConcat,']
                 if layer in indexes:
-                    fp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head contact,']
+                    fp_indexes = [i for i, item in enumerate(netStructure_layer_def) if item == 'FP:head concat,']
                     out_dest_layer = fp_indexes[T_layer -1 - (indexes.index(layer))]
-                    dest_layers[layer].append(out_dest_layer) # to: FP:head contact
+                    dest_layers[layer].append(out_dest_layer) # to: FP:head concat
                     
          
                 # BP:V
